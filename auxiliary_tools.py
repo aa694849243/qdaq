@@ -17,7 +17,6 @@ import numpy as np
 import h5py
 from nptdms import TdmsFile
 
-
 def compact_speed_calc_info(speed_calc_info):
     """
     功能：整合转速计算的相关参数信息
