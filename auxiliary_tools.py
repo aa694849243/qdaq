@@ -196,7 +196,6 @@ def find_proximal_element(element, data):
     idx = (np.abs(np.asarray(data) - element)).argmin()
     return idx
 
-
 def find_proximal_elements(elements, data):
     """
     暂停使用

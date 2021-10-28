@@ -39,7 +39,6 @@ from initial_old import create_empty_twodtd_for_share, create_empty_temptd_for_s
     create_empty_twodsf_for_const, create_empty_tempsf_for_const, create_empty_threedos_for_share, \
     create_empty_twodoc_for_share, update_nvh_data_for_thread
 
-
 try:
     platform_info = platform.platform()
     if platform_info.lower().startswith('windows'):

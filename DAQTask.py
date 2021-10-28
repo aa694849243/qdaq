@@ -18,7 +18,7 @@ import sys
 import logging
 import traceback
 
-
+#test
 def get_daq_tasks():
     """
     功能：获取在NI MAX中保存的任务
