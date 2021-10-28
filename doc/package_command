@@ -1,0 +1,4 @@
+Pyinstaller -F -n "qDAQ_V3.1.0_20210804_A" D:\Wall_Work\3_Project\302_qDAQ\shengteng-qdaq\qdaq\qDAQ_MainProcess.py
+Pyinstaller -F -w -n "getSigMA_V1.9.1_20210803_A" D:\Wall_Work\3_Project\302_qDAQ\shengteng-qdaq\Tools\receive_server\getSigMA.py
+Pyinstaller -F -w -n "JsonFileManager_V1.3.0_20210729_A" D:\Wall_Work\3_Project\302_qDAQ\shengteng-qdaq\Tools\File_Manager\JsonFileManager.py
+Pyinstaller -F -w -n "en_de_crypt_tool_V1.0.0_20210727_A" D:\Wall_Work\3_Project\302_qDAQ\shengteng-qdaq\Tools\crypt\en_de_crypt.py

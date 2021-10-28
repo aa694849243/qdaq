@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+
+
+<head>
+    <title>电驱总成声学检测系统</title>
+    <meta charset="UTF-8">
+    <link rel="shortcut icon" href="../static/SVG/favicon.ico" type="image/x-icon">
+
+    <link rel="stylesheet" href="../static/CSS/Cmain.css" />
+
+    <link rel="stylesheet" href="../static/CSS/bootstrap.css" />
+
+    <script type="text/javascript" src="../static/JS/AJAX.js"></script>
+
+    <script type="text/javascript" src="../static/JS/jquery-3.5.1.js"></script>
+
+    <script type="text/javascript" src="../static/JS/bootstrap.js"></script>
+
+    <script type="text/javascript" src="../static/JS/echarts.min.js"></script>
+
+    <style>
+        .page-header h1 {
+         /*margin-left:2rem*/
+            text-align: center;
+        }
+        .page-header img {
+            width: 24rem;
+            height: 12rem;
+            padding: 1rem;
+            margin-top: -8rem;
+            margin-left: 2.5rem;
+        }
+        .productImg {
+            width: 30rem;
+            height: 20rem;
+            margin-right: 15rem;
+            margin-top: -5rem;
+            float: right;
+        }
+        .panel_cssAdd{
+           width:100%;
+           margin-left:5rem;
+        }
+        .panel-body-cssAdd{
+        margin-left:3rem;
+        }
+        .woe_addCss{
+        margin-top:0.5rem;
+        margin-left:0.05rem;}
+        .tip_addCss{
+        margin-left:5rem;
+        margin-right:3rem;
+        }
+        #idCanvas{
+            width: 100%;
+            height: 40rem;
+        }
+        #result {
+            width: 10rem;
+            height: 10rem;
+            margin-left: 20rem;
+            margin-top: 1rem;
+            text-align: center;
+            font-size: 14px;
+            border-radius: 50%;
+            background-color: grey;
+            color: white;
+        }
+        #result span {
+            line-height: 8rem;
+        }
+    </style>
+</head>
+
+<body>
+        <!--  头部 -->
+
+    <div class="page-header">
+      <h1> 电驱总成声学检测系统</h1>
+<!--         <img src="../static/SVG/SynovateTechnologiesLogo9000x3000.png" alt="..." class="img-rounded">-->
+      <img  src="../static/SVG/BYDlogo.png" alt="..." class="img-rounded">
+    </div>
+
+        <!--  查询区  -->
+
+<div class="row">
+  <div class="col-md-4">
+      <div class="panel panel-default panel_cssAdd">
+      <div class="panel-heading">产品信息</div>
+      <div class="panel-body panel-body-cssAdd">
+          <div class="row">
+              <div class="col-md-12">
+                <div class="row">
+                  <div class="col-md-3" >
+                    <label for="InputName1" set-lan="html:type" style="margin-left: 1rem;">产品类型</label>
+                  </div>
+                  <div class="col-md-9">
+                    <input type="text" class="form-control" id="InputName1" style="margin-top: -0.3rem;margin-bottom: 0.3rem;margin-left: -2rem;" placeholder="请填写产品类型">
+                  </div>
+                </div>
+                   <!-- <form class="form-inline">
+                   <label for="InputName1" set-lan="html:type">产品类型</label>
+                   <input type="text" class="form-control" id="InputName1" style="width:75%"  placeholder="请填写产品类型">
+                   </form> -->
+              </div>
+          </div>
+            <div class="row" style="margin-top: 0.5rem;">
+              <div class="col-md-12">
+                <div class="row">
+                  <div class="col-md-3">
+                    <label for="InputName2" style="margin-left: 1.5rem;"> 序列号 </label>
+                  </div>
+                  <div class="col-md-9">
+                    <input type="text" class="form-control" id="InputName2" style="margin-left: -2rem;" placeholder="请填写序列号">
+                 </div>
+                </div>
+                   <!-- <form class="form-inline" >
+                  <label for="InputName2"> 序列号 </label>
+                       <input type="text" class="form-control" id="InputName2" style="width:80%"  placeholder="请填写序列号">
+                   </form> -->
+              </div>
+          </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-2">
+<!--           <div id="btn_play" style="width: 100%;">-->
+<!--               <section class="playContainer">-->
+<!--                  <li id="liButton" class="playBtn" onclick="StartBtn()">-->
+<!--                    <a href="#" title="start" >Start</a>-->
+<!--                  </li>-->
+<!--             </section>-->
+<!--           </div>-->
+    <img id="result" src="../static/SVG/dengdai_1.svg"/>
+    <div style="margin-left: 20rem;width: 10rem; height: 4rem;text-align: center;"><span style="line-height: 5rem;font-size: 1.5rem;color: grey;" id="resultMsg" >未检测</span></div>
+    
+<!--    <img src="../static/SVG/chahao.svg" alt="">-->
+  </div>
+  <div class="col-md-6">
+      <img src="../static/SVG/BYD.png" class="productImg" alt="..."/>     
+  </div>
+</div>
+
+<!--提示区-->
+<div class="panel panel-default tip_addCss">
+  <div class="panel-body" id="tipBody">
+    提示内容区
+  </div>
+</div>
+
+<!--图表区-->
+<div class="panel panel-default tip_addCss">
+  <div class="panel-body">
+       <div id="idCanvas">
+       </div>
+  </div>
+</div>
+
+<!--          <div class="test_temp" style="width:500px;  float:left;margin-left:5rem;">-->
+
+
+
+
+
+
+<!--<div class="row">-->
+<!--  <div class="col-md-12">-->
+<!--      <p style="width:500px;margin-left:5rem;">当发现被测物有异响或任何异常情况时，请填写</p>-->
+<!--  </div>-->
+<!--</div>-->
+<!--<div class="row">-->
+<!--      <div class="col-md-8">-->
+<!--          <form class="form-inline" style="margin-left:5rem;">-->
+<!--          <div class="form-group">-->
+<!--            <label  for="exampleInputEmail3">现场判定</label>-->
+<!--            <input type="email" class="form-control" id="exampleInputEmail3" placeholder="请填入异常信息">-->
+<!--          </div>-->
+<!--        </form>-->
+<!--          <button type="submit" class="btn btn-default"  style="margin-top:-5.5rem;margin-left:32rem;">保存</button>-->
+
+<!--      </div>-->
+<!--</div>-->
+
+
+
+
+
+
+
+<!-- Button trigger modal -->
+<!--<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">-->
+<!--  Launch demo modal-->
+<!--</button>-->
+<!--校验提示框-->
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal1" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel1">提示框</h5>
+      </div>
+      <div class="modal-body">
+        请填写好产品信息和序列号。
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">提示框</h5>
+<!--        <button type="button" class="close" data-dismiss="modal" aria-label="Close">-->
+<!--          <span aria-hidden="true">&times;</span>-->
+<!--        </button>-->
+      </div>
+      <div class="modal-body">
+        你确定要停止吗？
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+        <button type="button" class="btn btn-primary" onclick="stopBtn()" >确定</button>
+      </div>
+    </div>
+  </div>
+</div>
+    <script type="text/javascript" src="../static/JS/index.js"></script>
+
+</body>
+</html>

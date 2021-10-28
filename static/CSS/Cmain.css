@@ -1,0 +1,122 @@
+body{
+    /* color: white; */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 30;
+}
+
+.ShowBox {
+    position: absolute;
+    width: 100%;
+    /* height: 100%; */
+    height:100%;
+    top: -3px;
+    left: -3px;
+    /* background: greenyellow; */
+    /* background: #000000; */
+    /* background: #00791e; */
+    border: 1px solid black;
+
+}
+
+.Canvas111{
+    overflow: hidden;
+    position: absolute;
+    /* transform: rotateX(180deg); */
+    top: 32%;
+    left: 50px;
+    right:50px;
+    /* width: 50%; */
+    width: 50rem;
+    height: 30rem;
+    background: white;
+    border: 1px solid black;
+}
+/*
+.btn{
+
+    position:absolute;
+    margin-left:28rem;
+    margin-left:28rem;
+    margin-top:0.5rem;
+    margin-top:0.5rem;
+    font-size: 23;
+}*/
+/*
+.btn:hover {
+    background: rgb(0, 250, 255);
+    color: white;
+}
+
+.btn:active {
+    background: rgb(255, 81, 0);
+    color: white;
+}
+*/
+
+
+        /*
+2020-09-17
+ */
+/* .productType{
+    width:360px;
+    height:100px;
+    padding:5px 30px;
+    margin:50px;
+    border:1px solid;
+} */
+/* span.title{
+    display:block;
+    width:80px;
+    height:20px;
+    position:relative;
+    top:-15px;
+    text-align: center;
+    background: white;
+}
+input{
+    border: 1px solid #ccc;
+    padding: 7px 0px;
+    border-radius: 3px; 
+    padding-left:5px;
+    width:75%;
+} */
+
+/* .tipMessage{
+margin-top: 2%;
+margin-left:-2rem;
+ width: 1800px;
+height:60%;
+border: 1px solid black;
+}
+.footer{
+margin-top:35rem;
+margin-left:-2rem;
+ width: 1800px;
+height:60%;
+border: 1px solid black;
+} */
+
+/*img{*/
+/*width:36rem;*/
+/*height:12rem;*/
+/*display: inline;*/
+/*float: right;*/
+/*margin-top:-8.8rem;*/
+/*}*/
+
+
+/* 箭头按钮 */
+ .playContainer { position: relative; float: left;margin-left:1rem;  }
+ .playContainer li { position: relative; float: left; border: 25px solid #404040; color: #404040; height: 0; width:0; -webkit-border-radius: 100%; -moz-border-radius: 100%; -o-border-radius: 100%; border-radius: 100%; margin: 0 20px;margin-top:5rem;margin-left:5rem }
+ .playContainer a { border-style: solid; text-indent: -9999px; position: absolute; top: -8px; left: -3px;  }
+
+ .playBtn a { border-color: transparent transparent transparent #fff; border-width: 8px 0 8px 12px;  width: 0; height: 0; }
+ .pauseBtn a { border-color: transparent white;  border-width: 0 6px; height: 15px; width: 6px; left: -5px; }
+
+/* 提示内容区 */
+
+#tipBody {
+  height:16rem;
+  width:100%;
+  overflow:auto;
+}

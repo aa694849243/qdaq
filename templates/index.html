@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+
+
+<head>
+    <title>RealTime data showing</title>
+
+    <link rel="stylesheet" href="../static/CSS/Cmain.css" />
+
+    <link rel="stylesheet" href="../static/CSS/bootstrap.css" />
+
+    <script type="text/javascript" src="../static/JS/AJAX.js"></script>
+
+    <script type="text/javascript" src="../static/JS/jquery-3.5.1.js"></script>
+    
+    <script type="text/javascript" src="../static/JS/echarts.min.js"></script>
+
+    <script type="text/javascript" src="../static/JS/bootstrap.js"></script>
+
+
+</head>
+
+<body>
+    <div class="ShowBox" id="id_ShowBox">
+        <b><h3>&nbsp;&nbsp;&nbsp;&nbsp;Real Time Showing</h3></b>
+        <div class="productType">
+            <span class="title">产品信息</span>
+            <div class="test_temp" style="width:100%;  float:left;">
+                <div>产品类型: <input type="text" ><br></div>
+                <div style="margin-top:10px">&nbsp;序&nbsp;列&nbsp;号:&nbsp; <input type="text" ></div>
+            </div>
+        <div class="btn">
+             <section class="playContainer">
+                  <li class="playBtn" onclick="StartBtn()">
+                    <a href="#" title="start" >Start</a>
+                  </li>
+<!--                  <li class="pauseBtn">-->
+<!--                    <a href="#" title="pause">Pause</a>-->
+<!--                  </li>-->
+  	                </section>
+        </div>
+            <div>
+                <img src="../static/SVG/Synovate Technologies Logo 9000x3000.png" />
+            </div>
+<!--&lt;!&ndash;        <button class="btn" type="button" onclick="StartBtn()">Start</button>&ndash;&gt;-->
+<!--&lt;!&ndash;        <button class="btn" type="button" onclick="StopBtn()">Stop</button>&ndash;&gt;-->
+
+<!--        &lt;!&ndash; <span>&nbsp;&nbsp;request data = <span id="data1"></span></span> &ndash;&gt;-->
+<!--        -->
+<!--        &lt;!&ndash; <canvas class="Canvas1" id="idCanvas1">-->
+<!--        </canvas> &ndash;&gt;-->
+            <div class="tipMessage"> </div>
+            <div class="Canvas" id="idCanvas"></div>
+            <div class="test_temp" style="width:500px;  float:left;margin-top:32rem;">
+                <p style="width:500px">当发现被测物有异响或任何异常情况时，请填写</p>
+                <div>现场判定: <input style="width:55%;" type="text" ><button onclick="save" style="margin-left:1rem;width:4rem;height:2rem">保存</button></div>
+            </div>
+        </div>
+    </div>
+     <script type="text/javascript" src="../static/JS/index.js"></script>
+</body>
+</html>
