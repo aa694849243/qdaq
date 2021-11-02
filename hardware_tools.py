@@ -5,15 +5,18 @@
 @Author : Wall@Synovate
 @Email  : qxu@sonustc.com
 @Version: 1.0.0
-说明：获取当前运行电脑的硬件信息
+说明：获取当前运行电脑的硬件信息（linux下支持cpu id的获取）
 """
 
 import socket
 from psutil import net_if_addrs
 import platform
 
-if platform.platform().lower().startswith('windows'):
+platform_info = platform.platform().lower()
+if platform_info.startswith('windows'):
     from wmi import WMI
+else:
+    import os
 
 
 # 以下为windows下的方法
@@ -59,10 +62,14 @@ def get_cpu_id():
     输入：无
     返回：cpu序列号列表
     """
-    c = WMI()
-    id_list = []
-    for cpu in c.Win32_Processor():
-        id_list.append(cpu.ProcessorId.strip())
+    if platform_info.startswith('windows'):
+        c = WMI()
+        id_list = []
+        for cpu in c.Win32_Processor():
+            id_list.append(cpu.ProcessorId.strip())
+    else:
+        temp_cpu_id = os.popen("sudo dmidecode -t 4 | grep ID")
+        id_list = [temp_cpu_id.read()[5:-1]]
     return id_list
 
 

@@ -208,7 +208,7 @@ def twodtd_crest(data, size):
     crest(float): one value for the input data
     max_value(float): temp max value of 1 frame data
     """
-    max_value = np.max(data)
+    max_value = np.max(np.abs(data))  # 由max(data)改为max(abs(data))
     xi2 = np.sum(np.power(data, 2))
     crest = max_value / np.sqrt(xi2 / size)
     return crest, max_value, xi2
@@ -377,7 +377,7 @@ def db_convertion(data, ref_value):
     2. 参考值，用于db的计算
     返回：转换后的结果
     """
-    return 20 * np.log10(np.abs(data) / ref_value)
+    return np.around(20 * np.log10(np.abs(data) / ref_value), 2)
 
 
 def oned_time_domain(temptd, calc_size, time_domain_calc_info, sensor_index,
@@ -718,7 +718,7 @@ def twod_order_spectrum(threed_os, task_info, sensor_index, indicator_diagnostic
 
 
 def oned_order_spectrum(twod_os, oned_os_calc_info, task_info,
-                        modulationDepthCalcInfo, sensor_index, db_flag=0):
+                        modulationDepthCalcInfo, sensor_index, db_flag=0, indicator_diagnostic=-1):
     """
     功能：计算一维关注阶次指标
     输入：
@@ -771,7 +771,7 @@ def oned_order_spectrum(twod_os, oned_os_calc_info, task_info,
                 'name': oned_os_calc_info['orderName'][i],
                 'unit': target_unit,
                 'value': target_value,
-                'indicatorDiagnostic': -1
+                'indicatorDiagnostic': indicator_diagnostic
             })
 
         modulationDepthCalcInfolist = modulationDepthCalcInfo[
@@ -830,13 +830,13 @@ def oned_order_spectrum(twod_os, oned_os_calc_info, task_info,
                         'name': "MD-" + str(
                             calinfo['modulationOrder']) + '-' + str(
                             modulatedOrder),
-                        'unit': None,
+                        'unit': "",
                         'value': np.sum(np.sqrt(
                             np.sum(np.power(yValue_numerator, 2),
                                    axis=1))) / np.sum(np.sqrt(
                             np.sum(np.power(yValue_denominator, 2),
                                    axis=1))),
-                        'indicatorDiagnostic': -1
+                        'indicatorDiagnostic': indicator_diagnostic
                     })
                     # 调制深度文档上的第二种方法（暂时不用）
                     # onedos_result.append({
@@ -1025,7 +1025,7 @@ def angular_resampling(rev, rev_time, target_vib, target_time, counter, points, 
 def order_spectrum(threed_os, twod_oc, counter_or, vibration_rsp,
                    vibration_rsp_time,
                    order_spectrum_calc_info, order_cut_calc_info, sensor_index,
-                   db_flag=0):
+                   db_flag=0, cut_off_points=0):
     """
     功能：计算三维阶次谱和二维阶次切片结果
     输入：
@@ -1038,6 +1038,7 @@ def order_spectrum(threed_os, twod_oc, counter_or, vibration_rsp,
     7. 阶次切片计算参数信息，包括关注阶次列表和阶次宽度
     8. 传感器索引，主要为了获取单位和db转换的参考值，以及窗函数
     9. 是否进行db转换
+    10. 需要指为参考值的数据点数
     返回：
     1. 三维阶次谱结果
     2. 二维阶次切片结果
@@ -1095,6 +1096,8 @@ def order_spectrum(threed_os, twod_oc, counter_or, vibration_rsp,
                    sensor_index]
         # 直流信号修正
         fvib[0] = fvib[0] / 2
+        # 将低阶（指定）的成分置为参考值
+        fvib[:cut_off_points] = order_spectrum_calc_info['refValue'][sensor_index]
         # 提取最大阶次范围内的阶次谱
         if order_spectrum_calc_info['maxOrder']:
             fvib = fvib[:len(order_spectrum_calc_info['order'])]
@@ -1148,7 +1151,7 @@ def order_spectrum_for_share(threed_os, twod_oc, counter_or, vibration_rsp,
                              vibration_rsp_time,
                              order_spectrum_calc_info, order_cut_calc_info,
                              sensor_index,
-                             db_flag=0):
+                             db_flag=0, cut_off_points=0):
     order_resolution = order_spectrum_calc_info['orderResolution']
     while order_spectrum_calc_info['nfft'] + order_spectrum_calc_info[
         'nstep'] * counter_or <= len(vibration_rsp):
@@ -1178,6 +1181,8 @@ def order_spectrum_for_share(threed_os, twod_oc, counter_or, vibration_rsp,
                    sensor_index]
         # 直流信号修正
         fvib[0] = fvib[0] / 2
+        # 将低阶（指定）的成分置为参考值
+        fvib[:cut_off_points] = order_spectrum_calc_info['refValue'][sensor_index]
         # 提取最大阶次范围内的阶次谱
         if order_spectrum_calc_info['maxOrder']:
             fvib = fvib[:len(order_spectrum_calc_info['order'])]
@@ -1231,7 +1236,7 @@ def order_spectrum_for_const(threed_os, twod_oc, counter_or, vibration_rsp,
                              sensor_index,
                              vib_start_index,
                              sampleRate,
-                             db_flag=0):
+                             db_flag=0, cut_off_points=0):
     order_resolution = order_spectrum_calc_info['orderResolution']
     while order_spectrum_calc_info['nfft'] + order_spectrum_calc_info[
         'nstep'] * counter_or <= len(vibration_rsp):
@@ -1265,6 +1270,8 @@ def order_spectrum_for_const(threed_os, twod_oc, counter_or, vibration_rsp,
                    sensor_index]
         # 直流信号修正
         fvib[0] = fvib[0] / 2
+        # 将低阶（指定）的成分置为参考值
+        fvib[:cut_off_points] = order_spectrum_calc_info['refValue'][sensor_index]
         # 提取最大阶次范围内的阶次谱
         if order_spectrum_calc_info['maxOrder']:
             fvib = fvib[:len(order_spectrum_calc_info['order'])]
@@ -1319,7 +1326,7 @@ def order_spectrum_for_const_fluctuation(threed_os, twod_oc, counter_or, vibrati
                                          vib_start_index,
                                          sampleRate,
                                          speed,
-                                         db_flag=0):
+                                         db_flag=0, cut_off_points=0):
     """
     阶次谱计算，转速存在波动，每一帧转速不同
     Args:
@@ -1350,6 +1357,8 @@ def order_spectrum_for_const_fluctuation(threed_os, twod_oc, counter_or, vibrati
                                         sensor_index], order_spectrum_calc_info["maxOrder"], )
     if len(fvib) == 0:
         return threed_os, twod_oc, counter_or
+        # 将低阶（指定）的成分置为参考值
+    fvib[:cut_off_points] = order_spectrum_calc_info['refValue'][sensor_index]
     x_value = (vib_start_index + len(vibration_rsp) / 2) / sampleRate
     threed_os["xValue"][counter_or] = x_value
     # 记录中间值用于计算二维平均阶次谱
@@ -1419,14 +1428,17 @@ def cepstrum(twod_os, cepstrum_calc_info, task_info, sensor_index, db_flag=0, in
                 np.fft.ifft(2 * np.log(twod_os[0]['yValue']))[
                 :len(twod_os[0]['yValue']) // 2],
                 task_info['refValue'][sensor_index]).tolist()
+            # target_value[0:2] = [0] * 2  # filter out the DC signal
+            target_value[0] = 0
             target_unit = 'dB'
         else:
             target_value = np.abs(np.fft.ifft(2 * np.log(twod_os[0]['yValue']))[
                                   :len(twod_os[0]['yValue']) // 2]).tolist()
+            # target_value[0:2] = [task_info['refValue'][sensor_index]] * 2   # filter out the DC signal
+            target_value[0] = task_info['refValue'][sensor_index]
             target_unit = task_info['units'][
                 task_info["indicatorsUnitChanIndex"][sensor_index]]
-            # 强制归零（直流分量），不然过大影响倒阶次谱结果的查看，这里需要主要的是转换dB时要避开
-        target_value[0] = 0  # filter out the DC signal
+
         ceps_result.append({
             'xName': 'CumulativeRotation ',
             'xUnit': 'r',

@@ -35,10 +35,8 @@ from utils import create_properities, file_namer
 from nvh_calculate import nvh_process
 from speed_process import speed_process
 from data_pack import datapack_process
-from hardware_tools import get_cpu_id, get_bios_id
-from DAQTask import reset_ni_device
-from mic_calibrate import cal_task, end_task, acquire as sen_acquire
-import mic_calibrate
+from hardware_tools import get_cpu_id
+from mic_calibrate import mic_setdefault
 
 # set the global variable (to avoid stop with out start or start without stop)
 # 是否正在进行测试的flag，start_command_flag=True，说明正在进行测试
@@ -68,9 +66,22 @@ status_flag = 0
 # 每个进程中该temp始终与gv_dict_status保持一致
 gv_dict_status_temp = gv.set_default_status()
 
+# 传感器校准启动状态
+calibrate_start_flag = False  # 初始状态为False表示未开始校准，True表示已开始（调start接口会切换）
+calibrate_end_flag = True  # 初始状态为Ture表示处于停止状态，False表示处于未停止状态（调end接口会切换）
+
 # define a server to receive the request of test bench
 app = Flask(__name__)
 CORS(app, supports_credentials=True)  # make server can be accessed from other PC
+
+
+result_dict = dict()
+result_dict[-1] = "界限值缺失"
+result_dict[0] = "不合格(超上限)"
+result_dict[1] = "合格"
+result_dict[2] = "异常(rms超下限,信号异常)"
+result_dict[3] = "次异常(其它指标超下限)"
+result_dict[-2] = "检测尚未结束"
 
 
 # ================================================================================================
@@ -79,7 +90,7 @@ CORS(app, supports_credentials=True)  # make server can be accessed from other P
 @app.route('/version', methods=['GET'])
 def get_version():
     resp = Response(
-        response=json.dumps({"code": 200, "msg": "20210901_A", "data": "version: v3.4.1"}),
+        response=json.dumps({"code": 200, "msg": "20211028_A", "data": "version: v3.6.2"}),
         mimetype='application/json')
     return resp
 
@@ -89,54 +100,151 @@ def get_version():
 def test():
     return render_template('templates.html')
 
+# 定义结果返回接口(总状态)
+@app.route('/AQS2RTRemoteControl/overallResult')
+def overallResult():
+    global result_dict,gv_dict_status
+    resp = Response(response="{}".format(result_dict[int(gv_dict_status.get("result"))] if gv_dict_status.get("result") else None),
+                    mimetype='text/plain')
+    return resp
 
-@app.route('/miccalibrate/start', methods=['GET', 'POST'])
+
+
+@app.route('/miccalibrate/start', methods=['GET', 'POST'])  # 开启mic校正命令
 def mic_cal():
-    if mic_calibrate.startflag:
+    global calibrate_start_flag, calibrate_end_flag, calibrate_timer_flag, calibrate_timer_queue
+    global queue_put_flag
+    qDAQ_logger.info('start calibrate')
+    if start_command_flag:
+        # 如果qDAQ正在正常操作，无法进行校准，直接返回正在进行测试
+        resp = Response(response=json.dumps(
+            {"code": 3000, "msg": "normal test is running", "data": None}), mimetype='application/json')
+        return resp
+    if calibrate_start_flag:
+        # 如果连点两次开始，那么就返回错误信息（避免重复开始）
         resp = Response(response=json.dumps(
             {"code": 3000, "msg": "repeated start", "data": None}), mimetype='application/json')
         return resp
-    mic_parameter = json.loads(request.data)
-    channel = ['ai0', 'ai1', 'ai2', 'ai3'].index(mic_parameter.get('channel'))
-    access = mic_parameter.get('access')
-    ampl = mic_parameter.get('ampl')
-    sample_freq = 102400
-    if access == 'Mic':
-        thread1 = Thread(
-            target=cal_task,
-            args=(
-                int(channel),
-                int(ampl),
-                int(sample_freq),
-            ),
-            daemon=True,
-        )
-        thread1.start()
+
+    try:
+        # mic_parameter = json.loads(request.data)  # 获取参数配置的json文件
+        mic_parameter = json.loads(request.get_data(as_text=True))
+        # print('mic_parameter:{}'.format(mic_parameter))
+        mic_setdefault(mic_parameter)  # 设置默认参数
+        gv_dict_flag[flag_index_dict['calibration']] = 1  # 启动灵敏度校准
+        # 初始化状态
+        gv_dict_status['code'] = 0
+        gv_dict_status["result"] = None
+        gv_dict_status['msg'] = ""
+        gv_dict_status['xml'] = list()
+        gv_dict_status['data'] = {"type": "", "serialNo": "", "testName": list(), "startX": list(),
+                                  "startY": list(), "endX": list(), "endY": list(), "x": 0.0,
+                                  "y": 0.0, "testResult": -2, "reportPath": None}
+        gv_dict_status['sensitivity'] = {'sensitivity': list(), 'rawData': list()}
+        if mic_parameter['channelNames'][0][:3] == 'Mic':
+            # 当前只支持麦克风灵敏度校准，将参数传入speed进程（数据采集）
+            Q_dict['Q_speed_in'].put(
+                {"param": mic_parameter, "gv_dict_status": gv_dict_status, "sensitivity_flag": 1, })
+            queue_put_flag = True
+            # 启动定时任务
+            calibrate_timer_flag = True
+            calibrate_timer_queue.put({'Cmd': '1', 'timeout': int(mic_parameter["timeout"])})
+
+            # 更新灵敏度校准的状态（已开始）
+            calibrate_start_flag = True
+            calibrate_end_flag = False
+            resp = Response(response=json.dumps(
+                {"code": 200, "msg": "start succeed", "data": None}), mimetype='application/json')
+            return resp
+        else:
+            resp = Response(response=json.dumps(
+                {"code": 3000, "msg": "access error", "data": None}), mimetype='application/json')
+            return resp
+    except Exception:
+        qDAQ_logger.error("calibrate start failed, failed msg:" + traceback.format_exc())
         resp = Response(
-            response=json.dumps({"code": 200, "msg": "sucess", "data": None}),
-            mimetype='application/json')
-    else:
-        resp = Response(response=json.dumps(
-            {"code": 3000, "msg": "access error", "data": None}), mimetype='application/json')
-    return resp
+            json.dumps({"code": 3000, "msg": " start calibrate failed", "data": None}), mimetype='application/json')
+        return resp
 
 
 @app.route('/miccalibrate/end', methods=['GET', 'POST'])
 def end_calibrate():
-    res = end_task()
-    resp = Response(response=json.dumps(
-        {"code": 200, "msg": "sucess", "data": list(res)}), mimetype='application/json')
+    global calibrate_start_flag, calibrate_end_flag, calibrate_timer_flag, queue_put_flag
+    qDAQ_logger.info('end calibrate')
+    if calibrate_end_flag:
+        # 如果连点两次开始，那么就返回错误信息（避免重复结束）
+        resp = Response(response=json.dumps(
+            {"code": 3000, "msg": "repeated end", "data": None}), mimetype='application/json')
+        return resp
+    # 正常请求结束
+    gv_dict_flag[flag_index_dict['calibration']] = 0  # 关闭校准
+    # 将灵敏度校准的状态重置
+    calibrate_start_flag = False
+    calibrate_end_flag = True
+    gv_dict_status['code'] = 0
+    gv_dict_status["result"] = -2
+    gv_dict_status['msg'] = ""
+    gv_dict_status['xml'] = list()
+    gv_dict_status['data'] = {"type": "", "serialNo": "", "testName": list(), "startX": list(),
+                              "startY": list(), "endX": list(), "endY": list(), "x": 0.0,
+                              "y": 0.0, "testResult": -2, "reportPath": None}
+    gv_dict_status['sensitivity'] = {'sensitivity': list(), 'rawData': list()}
+    if queue_put_flag:
+        qDAQ_logger.info("data reading stop!")
+        Q_dict['Q_speed_out'].get()
+    queue_put_flag = False
+    calibrate_timer_flag = False
+    resp = Response(response=json.dumps({"code": 200, "msg": "success end"}), mimetype='application/json')
     return resp
 
 
 @app.route('/miccalibrate/acquire', methods=['GET', 'POST'])
 def acquire_sensitivity():
-    val = sen_acquire()
-    print(val)
-    resp = Response(response=json.dumps(
-        {"code": 200, "msg": "sucess", "data": val}), mimetype='application/json')
-    print(mic_calibrate.q)
-    return resp
+    # 获取灵敏度校准结果
+    if not calibrate_start_flag:
+        # 如果未开始，直接请求则发送异常信息
+        resp = Response(response=json.dumps(
+            {"code": 3000, "msg": "Not started"}), mimetype='application/json')
+        return resp
+    try:
+        resp = Response(response=json.dumps(
+            {"code": 200, "msg": "success", "data": json.dumps({'sensitivity': -1, 'rawData': None})}),
+                        mimetype='application/json')
+        gv_dict_status_temp['sensitivity'] = gv_dict_status['sensitivity']
+        if gv_dict_status_temp['sensitivity']['sensitivity']:
+            # 存在数据
+            # print('1', len(gv_dict_status_temp['sensitivity']['sensitivity']))
+            sensitivity_value = gv_dict_status_temp['sensitivity']['sensitivity'].pop(0)
+            sensitivity_raw_data = gv_dict_status_temp['sensitivity']['rawData'].pop(0)
+            # print('2', len(gv_dict_status_temp['sensitivity']['sensitivity']))
+            gv_dict_status['sensitivity'] = gv_dict_status_temp['sensitivity']
+            # print('3', len(gv_dict_status['sensitivity']['sensitivity']))
+            if sensitivity_value != 'nan':
+                # 防止值异常
+                resp = Response(response=json.dumps({"code": 200, "msg": "success", "data": json.dumps(
+                    {'sensitivity': sensitivity_value, 'rawData': sensitivity_raw_data})}), mimetype='application/json')
+        return resp
+    except Exception:
+        resp = Response(response=json.dumps(
+            {"code": 3000, "msg": "get sensitivity failed", "data": None}),
+                        mimetype='application/json')
+        return resp
+
+
+@app.route("/checkSwitchable",methods=["GET"])
+def checkSwitchable():
+    # 处于simu大任务中
+    if simu_start_flag:
+        resp=Response(response=json.dumps({"code": 200, "msg": "sucess", "data": "simu"}))
+        return resp
+    # 没有处于simu大任务中，但是在运行，说明处于实采模式
+    if not simu_start_flag and start_command_flag:
+        resp=Response(response=json.dumps({"code": 200, "msg": "sucess", "data": "rt"}))
+        return resp
+    else:
+        # 没有处于simu大任务中，也没有在运行，说明是在待机
+        resp=Response(response=json.dumps({"code": 200, "msg": "sucess", "data": "switchable"}))
+        return resp
 
 
 # 定义网页实时显示端的状态请求路径
@@ -164,6 +272,10 @@ def init():
                 gv_dict_status_temp['code'] = gv_dict_status['code']
                 gv_dict_status_temp['result'] = gv_dict_status['result']
                 gv_dict_status_temp['msg'] = gv_dict_status['msg']
+                gv_dict_status_temp['sectionResult'] = gv_dict_status['sectionResult']
+                gv_dict_status_temp['allCount'] = gv_dict_status['allCount']
+                gv_dict_status_temp['abnormalCount'] = gv_dict_status['abnormalCount']
+                gv_dict_status_temp['unqualifiedCount'] = gv_dict_status['unqualifiedCount']
                 gv_dict_status_temp['data'] = gv_dict_status['data']
 
                 resp = Response(response=json.dumps(gv_dict_status_temp), mimetype='application/json')
@@ -187,10 +299,16 @@ def frontEndControlStart():
         resp = Response(response=json.dumps({"code": 3000, "msg": "simu指令重复发送", "data": None}),
                         mimetype='application/json')
         return resp
+    if calibrate_start_flag:
+        # 如果开始灵敏度校验则qDAQ不可以正常模式运行
+        resp = Response(response=json.dumps({"code": 3000, "msg": "传感器校准已开始", "data": None}),
+                        mimetype='application/json')
+        return resp
     try:
-        type_from_front = request.form.get("type")
-        serial_no_list = request.form.getlist("serialNoList")
-        simu_count = int(request.form.get("simu_count"))
+        request_d=json.loads(request.data)
+        type_from_front = request_d["type"]
+        serial_no_list = request_d["serialNoList"]
+        simu_count = int(request_d["simu_count"])
     except Exception:
         resp = Response(response=json.dumps({"code": 3000, "msg": "无法解析请求，请确认!", "data": None}),
                         mimetype='application/json')
@@ -220,7 +338,7 @@ def frontEndControlStop():
         resp = Response(json.dumps({"code": 3000, "msg": "重复发送了结束指令", "data": None}))
         return resp
     simu_end_request=True
-    resp = Response(json.dumps({"code": 3000, "msg": "结束指令发送成功，该文件simu结束后会结束simu任务", "data": None}))
+    resp = Response(json.dumps({"code": 200, "msg": "结束指令发送成功", "data": None}))
     return resp
 
 @app.route("/testBench",methods=["GET"])
@@ -238,7 +356,7 @@ def testBench():
 @app.route("/resetCount",methods=["POST"])
 def resetCount():
     global Q_dict
-    if simu_start_flag or start_command_flag:
+    if simu_start_flag or start_command_flag or calibrate_start_flag:
         return Response(response=json.dumps({"code": 3000, "msg": 'qdaq正在工作,请等待工作完成后重置计数', "data": "reset success"}))
     Q_dict['Q_datapack_in'].put("reset")
     Q_dict['Q_datapack_out'].get()
@@ -278,7 +396,13 @@ def start_stop_command():
                 # 判断是否可以发送结束指令
                 qDAQ_logger.info("等待发送结束指令")
 
-                while not simu_end_request:
+                while True:
+                    if simu_end_request:
+                        url_stop = "http://" + "localhost" + ":" + "8002" + "/AQS2RTRemoteControl/Command?Cmd=4"
+                        headers = {'Content-Type': 'application/json;charset=UTF-8'}
+                        qDAQ_logger.info("将要发送结束指令")
+                        r_end_command = requests.get(url_stop, headers=headers)
+                        break
                     time.sleep(1)
                     # 其它进程中出现了错误 或者nvh进程正常结束了,说明可以发送结束请求了。
                     # 此处逻辑:前端发送了结束指令，这里会
@@ -288,11 +412,13 @@ def start_stop_command():
                         flag_index_dict["datapack_finish"]]:
                         url_stop = "http://" + "localhost" + ":" + "8002" + "/AQS2RTRemoteControl/Command?Cmd=4"
                         headers = {'Content-Type': 'application/json;charset=UTF-8'}
+                        qDAQ_logger.info("将要发送结束指令")
                         r_end_command = requests.get(url_stop, headers=headers)
                         break
                 simu_time+=1
                 # todo：前端显示simu到第几个了
-
+        while not simu_end_request:
+            time.sleep(1)
         simu_start_flag = False
         simu_end_flag = True
         qDAQ_logger.info("type:{},serial_no_list:{} simu_count:{} simu任务已经完成".format(type_from_front
@@ -324,10 +450,13 @@ def qdaq():
             # 这种情况是在simu前端的任务时，台架发送了实采的请求
             resp = Response("Error=0\nState=2\nXInfo=simu start again")
             return resp
-
+        if calibrate_start_flag:
+            # 如果开始灵敏度校验则qDAQ不可以正常模式运行
+            resp = Response("Error=0\nState=2\nXInfo=calibrate already start")
+            return resp
         # to avoid double send start command
         if start_command_flag:
-            resp = Response("Error=0\nState=2\nXInfo=start again")
+            resp = Response("Error=0\nState=2\nXInfo=qDAQ normal test start again")
             return resp
         else:
             start_command_flag = True
@@ -379,6 +508,7 @@ def qdaq():
                                       "endX": list(), "endY": list(), "x": 0.0, "y": 0.0,
                                       "testResult": None, "reportPath": None,"testStartTime":start_timestamp.timestamp()}
             gv_dict_status['xml'] = list()
+            gv_dict_status['sensitivity'] = {'sensitivity': list(), 'rawData': list()}
             # create flag dict to control the thread
             # 开启相应进程内的任务（转速计算识别，NVH分析和结果数据封装）
             gv_dict_flag[flag_index_dict['speedCalclation']] = 1
@@ -458,7 +588,7 @@ def qdaq():
             Q_dict['Q_speed_in'].put(
                 {"param": param, "gv_dict_status": gv_dict_status, "file_info": file_info,
                  "start_timestamp": start_timestamp, "time_click_start": time_click_start,
-                 "is_simu_mode":is_simu_mode})
+                 "is_simu_mode":is_simu_mode, "sensitivity_flag": 0})
             # 2. 传递参数到结果数据封装进程
             Q_dict['Q_datapack_in'].put(
                 {"gv_dict_status": gv_dict_status, "param": param, "test_result": test_result,
@@ -549,7 +679,7 @@ def qdaq():
             start_command_flag = False
             stop_command_flag = True
             gv_dict_status['code'] = 0
-            gv_dict_status["result"] = -2
+            gv_dict_status["result"] = None
             gv_dict_status["sectionResult"] = {"testName": list(), "limitComResult": list(), "mlResult": list()}
             gv_dict_status["allCount"]=None
             gv_dict_status["abnormalCount"]=None
@@ -559,6 +689,8 @@ def qdaq():
             gv_dict_status['data'] = {"type": "", "serialNo": "", "testName": list(), "startX": list(),
                                       "startY": list(), "endX": list(), "endY": list(), "x": 0.0,
                                       "y": 0.0, "testResult": -2, "reportPath": None}
+            gv_dict_status['sensitivity'] = {'sensitivity': list(), 'rawData': list()}
+            queue_put_flag = False
             gc.collect()
             qDAQ_logger.debug("time_for_stop:{}".format(time.time() - time_click_stop))
             resp = Response(response="Error=0\nState=0\nXInfo=test stop", mimetype='text/plain')
@@ -617,6 +749,21 @@ def terminate_command():
             "internal stop command sending failed, failed msg:" + traceback.format_exc())
 
 
+def calibrate_end_command():
+    # send stop command if data acquisition not stopped(can not receive cmd=4 from test bench)
+    addr = 'http://localhost:8002/miccalibrate/end'
+    headers = {'Content-Type': 'application/json;charset=UTF-8'}
+    try:
+        print("internal calibrate end")
+        r = requests.get(addr, headers=headers)
+        qDAQ_logger.info(r.text)
+    except Exception:
+        gv_dict_status["code"] = 3000
+        gv_dict_status["msg"] = "校准结束命令发送失败!"
+        qDAQ_logger.error(
+            "internal calibrate end command sending failed, failed msg:" + traceback.format_exc())
+
+
 def auto_terminate():
     # 自动结束数据采集
     global timer_flag, timer_queue
@@ -637,11 +784,31 @@ def auto_terminate():
                     break
 
 
+def auto_end_calibrate():
+    # 自动停止灵敏度校准
+    global calibrate_timer_flag, calibrate_timer_queue
+    while True:
+        # 只有cmd=1的时候才能获取到队列里的数据，其他时候等待
+        data = calibrate_timer_queue.get()
+        if data['Cmd'] == '1':
+            # 将计数器清零
+            time_counter = 0
+            interval = data['timeout']
+            while calibrate_timer_flag:
+                if time_counter < interval:
+                    time.sleep(1)
+                    time_counter += 1
+                else:
+                    # 满足超时条件则调用cmd=4指令并退出
+                    calibrate_end_command()
+                    break
+
+
 if __name__ == '__main__':
     # 主函数，程序执行的入口
     qDAQ_logger.debug("main start")
     multiprocessing.freeze_support()  # 保护主进程
-    global gv_dict_status, timer_queue, simu_queue
+    global gv_dict_status, timer_queue, simu_queue,calibrate_timer_queue
     # global Q_dict
     try:
         # 信息校验
@@ -666,7 +833,7 @@ if __name__ == '__main__':
 
     except Exception:
         qDAQ_logger.error("config info error, error msg:" + traceback.format_exc())
-        os.system('Pause')
+        input()
         sys.exit()
 
     if version == 1:
@@ -687,7 +854,7 @@ if __name__ == '__main__':
                 shm_vib_list.append(
                     shared_memory.SharedMemory(name="shm_vib" + str(i), create=True, size=size))
             # trigger的位置,理论上每两个上升沿/下降沿所在的位置至少相差2，否则是无法识别trigger的 例：1 -1 1 -1
-
+            # TODO:校验旋变信号下trigger与原始数据点数之间的关系
             shm_trigger = shared_memory.SharedMemory(name='shm_trigger', create=True,
                                                      size=int(size / 2 + 4))
             # 保存转速曲线，转速曲线的位置有trigger位置决定，最多每一个trigger处对应一个转速
@@ -737,6 +904,7 @@ if __name__ == '__main__':
                 shm_vib_list.append(
                     shared_memory.SharedMemory(name="shm_vib" + str(i), create=True, size=size))
             # trigger的位置,理论上每两个上升沿/下降沿所在的位置至少相差2，否则是无法识别trigger的 例：1 -1 1 -1
+            # TODO:校验旋变信号下trigger与原始数据点数之间的关系
             shm_trigger = shared_memory.SharedMemory(name='shm_trigger', create=True,
                                                      size=int(size / 2 + 4))
             # 保存转速曲线，转速曲线的位置有trigger位置决定，最多每一个trigger处对应一个转速
@@ -802,6 +970,11 @@ if __name__ == '__main__':
         timertask = Thread(target=auto_terminate, args=())
         timertask.start()
 
+        # 开启线程执行定时任务（软件启动时开启，防止句柄增加）
+        calibrate_timer_queue = Queue(1)
+        calibrate_timertask = Thread(target=auto_end_calibrate, args=())
+        calibrate_timertask.start()
+
         # 设置自动回收垃圾
         gc.enable()
         gc.set_threshold(1, 1, 1)
@@ -848,7 +1021,7 @@ if __name__ == '__main__':
             proc.start()
     except Exception:
         qDAQ_logger.error("Process start error :" + traceback.format_exc())
-        os.system('Pause')
+        input()
         sys.exit()
 
     try:
@@ -864,5 +1037,5 @@ if __name__ == '__main__':
         server.serve_forever()
     except Exception:
         qDAQ_logger.error("Server start error :" + traceback.format_exc())
-        os.system("Pause")
+        input()
         sys.exit()

@@ -838,7 +838,6 @@ if __name__ =="__main__":
             counter+=1
 
         plt.figure(filename)
-
         plt.plot(rpml_list,rpm_list)
         plt.xlabel("t/s")
         plt.ylabel("speed/rpm")

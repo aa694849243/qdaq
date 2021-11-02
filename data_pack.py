@@ -11,7 +11,7 @@ from common_info import limit_folder, limit_file, sensor_count, flag_index_dict,
     qDAQ_logger
 from ml_qdaq_predict import ml_qdaq
 from utils import write_json, read_json, send_result_data, decrypt_data
-from limit_compare import comparator
+from limit_compare_new import comparator
 from json2xml import dict_to_xml, xml_write
 import gc
 

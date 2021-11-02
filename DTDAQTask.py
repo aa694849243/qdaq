@@ -104,13 +104,22 @@ def set_ai_config(ai_device, task_info, iepe_mode=IepeMode.ENABLED):
             coupling = CouplingMode.AC
             ai_config.set_chan_iepe_mode(chan, iepe_mode)
             ai_config.set_chan_coupling_mode(chan, coupling)
-            ai_config.set_chan_sensor_sensitivity(chan, task_info['sensitivity'][chan])
+            # NI板卡的灵敏度单位为mV/g，DT板卡的灵敏度单位为V/g
+            ai_config.set_chan_sensor_sensitivity(chan, task_info['sensitivity'][chan]/1000)
 
         elif chan_type == 'Sound':
             coupling = CouplingMode.AC
             ai_config.set_chan_iepe_mode(chan, iepe_mode)
             ai_config.set_chan_coupling_mode(chan, coupling)
-            ai_config.set_chan_sensor_sensitivity(chan, task_info['sensitivity'][chan])
+            # NI板卡的灵敏度单位为mV/Pa，DT板卡的灵敏度单位为V/Pa
+            ai_config.set_chan_sensor_sensitivity(chan, task_info['sensitivity'][chan]/1000)
+
+        # 是否进行线性转化
+        if task_info['lineScale']['flag'][chan]:
+            # 设置偏置
+            ai_config.set_chan_offset(chan, task_info['lineScale']['intercept'][chan])
+            # 设置斜率
+            ai_config.set_chan_slope(chan, task_info['lineScale']['slope'][chan])
 
 
 def buffer_creator(task_info):

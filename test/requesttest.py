@@ -1,9 +1,11 @@
+import json
+
 import requests
 def start():
     url="http://localhost:8002/frontEndControl/Start"
-    data={"type":"KTZ66X32S-alltests-resolver",
+    data=json.dumps({"type":"KTZ66X32S-alltests-resolver",
           "serialNoList":["byd-alltests","byd-alltests-2"],
-          "simu_count":2}
+          "simu_count":2})
     r=requests.post(url,data=data)
     print(r)
 def stop():

@@ -55,10 +55,7 @@ def set_default_status():
     _global_dict['data'] = {"type": "", "serialNo": "", "testName": list(), "startX": list(), "startY": list(), "endX":
                             list(), "endY": list(), "x": 0.0, "y": 0.0}
     _global_dict['xml'] = list()
-
-
-
-
+    _global_dict['sensitivity'] = {'sensitivity': list(), 'rawData': list()}
     return _global_dict
 
 
