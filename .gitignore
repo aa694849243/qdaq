@@ -294,3 +294,5 @@ cython_debug/
 *.iml
 out
 gen
+auxiliary_tools.py
+/Simu/
