@@ -17,7 +17,8 @@ import traceback
 import configparser
 from utils import decrypt_data, read_json
 from common_info import baseFolder, ni_device, xName, xUnit, sensor_count, speed_signal, encrypt_flag, \
-    Cryptor, server_ip, version, constant_initial_indicator_diagnostic
+    Cryptor, server_ip, version, constant_initial_indicator_diagnostic, \
+    drive_initial_indicator_diagnostic, coast_initial_indicator_diagnostic, cut_off_freq
 
 
 def folder_info_update():
@@ -35,8 +36,12 @@ def folder_info_update():
     folder_info = dict()
     folder_info["rawData"] = os.path.join(baseFolder, "Data")
     folder_info["reportData"] = os.path.join(baseFolder, "Report")
-    folder_info["reportInfoMissing"] = os.path.join(baseFolder, "JSON_InfoMissing")
-    folder_info["reportNetError"] = os.path.join(baseFolder, "JSON_NetError")
+    # 结果数据上传失败时本地保存的位置
+    folder_info["reportInfoMissing"] = os.path.join(baseFolder, "Error/JSON_InfoMissing")
+    folder_info["reportNetError"] = os.path.join(baseFolder, "Error/JSON_NetError")
+    # ftp或本地数据移动失败是本地保存的位置
+    folder_info["uploadError"] = os.path.join(baseFolder, "Error/rawData_uploadError")
+    folder_info["analysisError"] = os.path.join(baseFolder, "Error/rawData_analysisError")
     folder_info["temp"] = os.path.join(baseFolder, "temp")
     return folder_info
 
@@ -117,7 +122,7 @@ def task_info_update(task_info):
     return task_info
 
 
-def speed_calc_info_update(speed_calc_info):  # todo 转速识别需要加参数
+def speed_calc_info_update(speed_calc_info):
     """
     update speed calculation info, add 2 factors to avoid re calculation inside loop
     功能：提前计算好需要重复计算的参数以加快实时模式的速度，包括：
@@ -126,25 +131,23 @@ def speed_calc_info_update(speed_calc_info):  # todo 转速识别需要加参数
     3. 转速比（speedRatio），用于结果数据中的转速转换，默认为1.0
     返回：更新后的转速计算信息
     """
-    for i in range(testsectionsnum := len(speed_calc_info)):
-        # testsectionnum 测试段数目
-        speed_calc_info[i]['rpmFactor'] = 60 * speed_calc_info[i]['averageNum'] / speed_calc_info[i][
-            'ppr']
-        speed_calc_info[i]['step'] = speed_calc_info[i]['averageNum'] - speed_calc_info[i]['overlap']
-        if speed_calc_info[i]['overlap'] < speed_calc_info[i]['averageNum']:
-            speed_calc_info[i]['resampleFactor'] = speed_calc_info[i]['averageNum'] - \
-                                                   speed_calc_info[i]['overlap']
-        else:
-            # 避免overlap过大导致无法进行计算（不能超过平均点数）
-            speed_calc_info[i]['overlap'] = 0
-            speed_calc_info[i]['resampleFactor'] = speed_calc_info[i]['averageNum']
-        # 确认转速比
-        if 'speedRatio' not in speed_calc_info[i].keys():
-            # 若没有设置转速比则默认是1.0
-            speed_calc_info[i]['speedRatio'] = 1.0
-        if speed_calc_info[i]['speedRatio'] <= 0:
-            # 若转速比异常（小于等于0）则认为设置出错，强制设置为1
-            speed_calc_info[i]['speedRatio'] = 1.0
+    speed_calc_info['rpmFactor'] = 60 * speed_calc_info['averageNum'] / speed_calc_info[
+        'ppr']
+    speed_calc_info['step'] = speed_calc_info['averageNum'] - speed_calc_info['overlap']
+    if speed_calc_info['overlap'] < speed_calc_info['averageNum']:
+        speed_calc_info['resampleFactor'] = speed_calc_info['averageNum'] - \
+                                            speed_calc_info['overlap']
+    else:
+        # 避免overlap过大导致无法进行计算（不能超过平均点数）
+        speed_calc_info['overlap'] = 0
+        speed_calc_info['resampleFactor'] = speed_calc_info['averageNum']
+    # 确认转速比
+    if 'speedRatio' not in speed_calc_info.keys():
+        # 若没有设置转速比则默认是1.0
+        speed_calc_info['speedRatio'] = 1.0
+    if speed_calc_info['speedRatio'] <= 0:
+        # 若转速比异常（小于等于0）则认为设置出错，强制设置为1
+        speed_calc_info['speedRatio'] = 1.0
     return speed_calc_info
 
 
@@ -223,12 +226,14 @@ def speed_recog_info_update(speed_recog_info):
                 # 升速段
                 speed_recog_info['speedPattern'].append(2)
                 # 设置指标的初始化结果
-                speed_recog_info['initial_indicator_diagnostic'].append(-1)
+                speed_recog_info['initial_indicator_diagnostic'].append(
+                    drive_initial_indicator_diagnostic)
             else:
                 # 降速段
                 speed_recog_info['speedPattern'].append(3)
                 # 设置指标的初始化结果
-                speed_recog_info['initial_indicator_diagnostic'].append(-1)
+                speed_recog_info['initial_indicator_diagnostic'].append(
+                    coast_initial_indicator_diagnostic)
     speed_recog_info['overallMinSpeed'] = min(speed_recog_info['minSpeed'])
     speed_recog_info["test_count_except_dummy"] = speed_recog_info['notDummyFlag'].count(1)
 
@@ -334,6 +339,7 @@ def time_domain_calc_info_update(time_domian_calc_info, task_info, basic_info):
 
     # return time_domian_calc_info
 
+
     if "Speed" in time_domian_calc_info['vibrationIndicatorList']:
         time_domian_calc_info['vibrationIndicatorList'].remove("Speed")
     if "Speed" in time_domian_calc_info['soundIndicatorList']:
@@ -366,6 +372,8 @@ def time_domain_calc_info_update(time_domian_calc_info, task_info, basic_info):
     time_domian_calc_info['xUnit'] = xUnit
     time_domian_calc_info['calSize'] = int(task_info["sampleRate"] / time_domian_calc_info["calRate"])
     return time_domian_calc_info
+
+
 
 
 def order_spectrum_calc_info_update(order_spectrum_calc_info, speed_calc_info, speed_recog_info,
@@ -432,17 +440,16 @@ def order_spectrum_calc_info_update(order_spectrum_calc_info, speed_calc_info, s
         order_spectrum_calc_info['order'] = (order_spectrum_calc_info['order'][:(
                 order_spectrum_calc_info['revNum'] * order_spectrum_calc_info[
             'maxOrder'])])
-    order_spectrum_calc_info['convertOrder'] = []
-    order_spectrum_calc_info['ppr'] = []
-    for i in range(testsection_num := len(speed_calc_info)):
-        if speed_calc_info[i]['speedRatio'] != 1:
-            # 提前计算需要更换的阶次轴（若转速比不为1才需要进行转换）
-            order_spectrum_calc_info['convertOrder'].append(
-                (order_spectrum_calc_info['order'] / speed_calc_info[i]['speedRatio']).tolist())
-        else:
-            order_spectrum_calc_info['convertOrder'].append([])
-        order_spectrum_calc_info['ppr'].append(speed_calc_info[i]['ppr'])
+    if speed_calc_info['speedRatio'] != 1:
+        # 提前计算需要更换的阶次轴（若转速比不为1才需要进行转换）
+        order_spectrum_calc_info['convertOrder'] = (
+                order_spectrum_calc_info['order'] / speed_calc_info[
+            'speedRatio']).tolist()
+    order_spectrum_calc_info['ppr'] = speed_calc_info['ppr']
     order_spectrum_calc_info['refValue'] = task_info['refValue']
+    # 计算出每个测试端多少个点需要设置为参考值（去除低阶成分）
+    order_spectrum_calc_info['cutOffNum'] = [round(cut_off_freq * 60 / x / order_spectrum_calc_info['orderResolution']) for x in speed_recog_info['minSpeed']]
+
     order_spectrum_calc_info['xName'] = xName
     order_spectrum_calc_info['xUnit'] = xUnit
     arPoints = round(task_info["sampsPerChan"] / 200)
@@ -463,16 +470,19 @@ def order_cut_calc_info_update(order_cut_calc_info, order_spectrum_calc_info):
     max_order_available = \
         order_spectrum_calc_info['maxOrder'] - order_spectrum_calc_info['orderResolution'] * \
         (order_cut_calc_info['pointNum'] // 2 + 1)
-    for i in range(testSectionNum := len(order_cut_calc_info['orderList'])):
-        min_order = min(map(min, order_cut_calc_info['orderList'][i]))
-        max_order = max(map(max, order_cut_calc_info['orderList'][i]))
-        # 校验关注阶次
-        if min_order < min_order_available:
-            raise ValueError(
-                f'test section {i}: min order of 2D order slice: {min_order} set is out of range, should bigger than: {min_order_available}')
-        if max_order > max_order_available:
-            raise ValueError(
-                f'test section {i}:max order of 2D order slice: {max_order} set is out of range, should smaller than: {max_order_available}')
+    min_order = min(map(min, order_cut_calc_info['orderList']))
+    max_order = max(map(max, order_cut_calc_info['orderList']))
+    # 校验关注阶次
+    if min_order < min_order_available:
+        raise ValueError(
+            'min order of 2D order slice: {} set is out of range, should bigger than: {}'.format(
+                min_order,
+                min_order_available))
+    if max_order > max_order_available:
+        raise ValueError(
+            'max order of 2D order slice: {} set is out of range, should smaller than: {}'.format(
+                max_order,
+                max_order_available))
     order_cut_calc_info['xName'] = xName
     order_cut_calc_info['xUnit'] = xUnit
     return order_cut_calc_info
@@ -489,16 +499,19 @@ def oned_os_calc_info_update(oned_os_calc_info, order_spectrum_calc_info):
             oned_os_calc_info['pointNum'] // 2)
     max_order_available = order_spectrum_calc_info['maxOrder'] - (
             order_spectrum_calc_info['orderResolution'] * (oned_os_calc_info['pointNum'] // 2 + 1))
-    for i in range(testSectionNum := len(oned_os_calc_info['orderList'])):
-        min_order = min(map(min, oned_os_calc_info['orderList'][i]))
-        max_order = max(map(max, oned_os_calc_info['orderList'][i]))
-        # 校验关注阶次
-        if min_order < min_order_available:
-            raise ValueError(
-                f'test section {i}: min order of 1D order indicator: {min_order} set is out of range, should bigger than: {min_order_available}')
-        if max_order > max_order_available:
-            raise ValueError(
-                f'test section {i}: max order of 1D order indicator: {max_order} set is out of range, should smaller than: {max_order_available}')
+    min_order = min(map(min, oned_os_calc_info['orderList']))
+    max_order = max(map(max, oned_os_calc_info['orderList']))
+    # 校验关注阶次
+    if min_order < min_order_available:
+        raise ValueError(
+            'min order of 1D order indicator: {} set is out of range, should bigger than: {}'.format(
+                min_order,
+                min_order_available))
+    if max_order > max_order_available:
+        raise ValueError(
+            'max order of 1D order indicator: {} set is out of range, should smaller than: {}'.format(
+                max_order,
+                max_order_available))
     return oned_os_calc_info
 
 
@@ -570,9 +583,7 @@ def ssa_calc_info_update(ssa_calc_info, speed_calc_info):
             # 更新ppr信息
             factor = np.prod(ssa_calc_info['gearRatio'][:i + 1]) / np.prod(
                 ssa_calc_info['gearRatio'][:ssa_calc_info['shaftIndex'] + 1])
-            ssa_calc_info['pprNum'].append([])
-            for j in range(testSectionNum := len(speed_signal)):
-                ssa_calc_info['pprNum'][-1].append(speed_calc_info[j]['ppr'] * factor)
+            ssa_calc_info['pprNum'].append(speed_calc_info['ppr'] * factor)
             ssa_calc_info['factors'].append(factor)
             # 更新转轴名称
             if i == 0:
@@ -644,7 +655,7 @@ def stat_factor_calc_info_update(stat_factor_calc_info, ssa_calc_info,
                     1 - stat_factor_calc_info['overlapRatio']))
     stat_factor_calc_info['indicatorUnit'] = list()
     stat_factor_calc_info['refValue'] = task_info['refValue']
-    stat_factor_calc_info['indicatorNestedList'] = list()
+    stat_factor_calc_info['indicatorNestedList'] =list()
 
     # if "Speed" in stat_factor_calc_info["indicatorList"]:
     #     stat_factor_calc_info["indicatorList"].remove("Speed")
@@ -681,7 +692,7 @@ def stat_factor_calc_info_update(stat_factor_calc_info, ssa_calc_info,
         elif channel_name.lower().startswith('mic') or channel_name.lower().startswith("umic"):
             stat_factor_calc_info["indicatorNestedList"].append(
                 stat_factor_calc_info['soundIndicatorList'])
-    for i, unit_index in enumerate(task_info["indicatorsUnitChanIndex"]):
+    for i,unit_index in enumerate(task_info["indicatorsUnitChanIndex"]):
         temp_unit_list = list()
         for indicator in stat_factor_calc_info['indicatorNestedList'][i]:
             if indicator == 'RMS':
@@ -697,8 +708,7 @@ def stat_factor_calc_info_update(stat_factor_calc_info, ssa_calc_info,
                 temp_unit_list.append('')
         stat_factor_calc_info['indicatorUnit'].append(temp_unit_list)
     stat_factor_calc_info['gearName'] = ssa_calc_info['gearName']
-    stat_factor_calc_info['indicatorNum'] = [len(indicatorList) for indicatorList in
-                                             stat_factor_calc_info["indicatorNestedList"]]
+    stat_factor_calc_info['indicatorNum'] =[len(indicatorList) for indicatorList in stat_factor_calc_info["indicatorNestedList"]]
     stat_factor_calc_info['xName'] = xName
     stat_factor_calc_info['xUnit'] = xUnit
 
@@ -852,7 +862,7 @@ if __name__ == '__main__':
         from common_info import config_folder, config_file
 
         t1 = time.perf_counter()
-        type_info = "ktz666x_cj"
+        type_info = "Seres-TTL-Type1"
         config_filename = os.path.join(config_folder,
                                        "_".join([type_info, config_file]))
         print(config_filename)
