@@ -1,0 +1,571 @@
+{
+	"basicInfo": {
+		"passingRate": 66.66,
+		"sensorId": [
+			"sensor01",
+			"sensor02"
+		],
+		"systemNo": "BYDDM",
+		"type": "KTZ66X32S_7",
+		"unit": "g"
+	},
+	"dataSaveFlag": {
+		"colorMap": 0,
+		"rawData": 1,
+		"resultJson": 1,
+		"speedCurve": 1,
+		"xml": 1
+	},
+	"filterInfo": {
+		"dtype": "lowpass",
+		"wn": [
+			10000
+		]
+	},
+	"indicatorByRevCalcInfo": [
+		{
+			"vibrationIndicatorList": [
+				{
+					"ename": "RMS",
+					"cname": "中文一",
+					"value": "1",
+					"desc": "描述1"
+				},
+				{
+					"ename": "Crest",
+					"cname": "中文二",
+					"value": "2",
+					"desc": "描述2"
+				},
+				{
+					"ename": "Kurtosis",
+					"cname": "中文三",
+					"value": "3",
+					"desc": "描述3"
+				}
+			],
+			"soundIndicatorList": [
+				{
+					"ename": "SPL",
+					"cname": "中文一",
+					"value": "1",
+					"desc": "描述1"
+				},
+				{
+					"ename": "Crest",
+					"cname": "中文二",
+					"value": "2",
+					"desc": "描述2"
+				},
+				{
+					"ename": "Kurtosis",
+					"cname": "中文三",
+					"value": "3",
+					"desc": "描述3"
+				}
+			],
+			"overlapRev": 0,
+			"revNum": 3
+		},
+		{
+			"vibrationIndicatorList": [
+				{
+					"ename": "RMS",
+					"cname": "中文一",
+					"value": "1",
+					"desc": "描述1"
+				},
+				{
+					"ename": "Crest",
+					"cname": "中文二",
+					"value": "2",
+					"desc": "描述2"
+				},
+				{
+					"ename": "Kurtosis",
+					"cname": "中文三",
+					"value": "3",
+					"desc": "描述3"
+				}
+			],
+			"soundIndicatorList": [
+				{
+					"ename": "SPL",
+					"cname": "中文一",
+					"value": "1",
+					"desc": "描述1"
+				},
+				{
+					"ename": "Crest",
+					"cname": "中文二",
+					"value": "2",
+					"desc": "描述2"
+				},
+				{
+					"ename": "Kurtosis",
+					"cname": "中文三",
+					"value": "3",
+					"desc": "描述3"
+				}
+			],
+			"overlapRev": 0,
+			"revNum": 3
+		}
+	],
+	"limitCompareFlag": {
+		"area": 0,
+		"line": 1,
+		"oned": 1,
+		"overLimit": 0,
+		"twodCeps": 0,
+		"twodOC": 1,
+		"twodOS": 0,
+		"twodTD": 1
+	},
+	"modulationDepthCalcInfo": [
+		{
+			"modulationDepthCalcList": [
+				{
+					"harmonicCount": 2,
+					"modulationOrder": 48.0,
+					"sideFrequencyCount": 3,
+					"modulatedInfo": [
+						{
+							"ename": "md-48-1",
+							"cname": "中文名1",
+							"value": 1.0,
+							"desc": "描述1"
+						},
+						{
+							"ename": "md-48-8",
+							"cname": "中文名2",
+							"value": 8.0,
+							"desc": "描述2"
+						}
+					]
+				}
+			],
+			"pointNum": 3
+		},
+		{
+			"modulationDepthCalcList": [
+				{
+					"harmonicCount": 2,
+					"modulationOrder": 48.0,
+					"sideFrequencyCount": 3,
+					"modulatedInfo": [
+						{
+							"ename": "md-48-1",
+							"cname": "中文名1",
+							"value": 1.0,
+							"desc": "描述1"
+						},
+						{
+							"ename": "md-48-8",
+							"cname": "中文名2",
+							"value": 8.0,
+							"desc": "描述2"
+						}
+					]
+				}
+			],
+			"pointNum": 3
+		}
+	],
+	"onedOSCalcInfo": [
+		{
+			"IndicatoryInfo": [
+				{
+					"ename": "123ords_2D",
+					"cname": "123阶次切片",
+					"value": [
+						1.0,
+						2.0,
+						3.0
+					],
+					"desc": "描述"
+				},
+				{
+					"ename": "3.57ords_2D",
+					"cname": "3.57阶次切片",
+					"value": [
+						3.57
+					],
+					"desc": "描述"
+				}
+			],
+			"pointNum": 17
+		},
+		{
+			"IndicatoryInfo": [
+				{
+					"ename": "123ords_2D",
+					"cname": "123阶次切片",
+					"value": [
+						1.0,
+						2.0,
+						3.0
+					],
+					"desc": "描述"
+				},
+				{
+					"ename": "3.57ords_2D",
+					"cname": "3.57阶次切片",
+					"value": [
+						3.57
+					],
+					"desc": "描述"
+				}
+			],
+			"pointNum": 17
+		}
+	],
+	"orderCutCalcInfo": [
+		{
+			"IndicatoryInfo": [
+				{
+					"ename": "123ords_2D",
+					"cname": "123阶次切片",
+					"value": [
+						1.0,
+						2.0,
+						3.0
+					],
+					"desc": "描述"
+				},
+				{
+					"ename": "3.57ords_2D",
+					"cname": "3.57阶次切片",
+					"value": [
+						3.57
+					],
+					"desc": "描述"
+				}
+			],
+			"pointNum": 17
+		},
+		{
+			"IndicatoryInfo": [
+				{
+					"ename": "123ords_2D",
+					"cname": "123阶次切片",
+					"value": [
+						1.0,
+						2.0,
+						3.0
+					],
+					"desc": "描述"
+				},
+				{
+					"ename": "3.57ords_2D",
+					"cname": "3.57阶次切片",
+					"value": [
+						3.57
+					],
+					"desc": "描述"
+				}
+			],
+			"pointNum": 17
+		}
+	],
+	"orderSpectrumCalcInfo": [
+		{
+			"maxOrder": 128,
+			"orderResolution": 0.03125,
+			"overlapRatio": 0.75,
+			"revNum": 32,
+			"winCorrectFlag": [
+				0,
+				0
+			],
+			"window": [
+				"kaiser",
+				"kaiser"
+			]
+		},
+		{
+			"maxOrder": 128,
+			"orderResolution": 0.03125,
+			"overlapRatio": 0.75,
+			"revNum": 32,
+			"winCorrectFlag": [
+				0,
+				0
+			],
+			"window": [
+				"kaiser",
+				"kaiser"
+			]
+		}
+	],
+	"speedCalcInfo": [
+		{
+			"name":"转速计算信息1",
+			"speedSource":"ttl",
+			"averageNum": 64,
+			"coils": 4,
+			"overlap": 62,
+			"ppr": 32,
+			"speedRatio": 1.0,
+			"triggerLevel": 0.5,
+			"triggerMode": "Rising",
+		},
+		{
+			"name":"转速计算信息1",
+			"speedSource":"ttl",
+			"averageNum": 64,
+			"coils": 4,
+			"overlap": 62,
+			"ppr": 32,
+			"speedRatio": 1.0,
+			"triggerLevel": 0.5,
+			"triggerMode": "Rising",
+		}
+	],
+	"speedRecogInfo": {
+		"endSpeed": [
+			3200.0,
+			5000.0
+		],
+		"endTorque": [
+			0.0,
+			0.0
+		],
+		"expectT": [
+			12.0,
+			12.0
+		],
+		"fluctuationT": [
+			1.0,
+			1.0
+		],
+		"maxT": [
+			16.0,
+			16.0
+		],
+		"minT": [
+			8.0,
+			8.0
+		],
+		"permittedExceptions": [
+			10,
+			10
+		],
+		"speedRange": 600.0,
+		"startSpeed": [
+			2800.0,
+			4600.0
+		],
+		"startTorque": [
+			0.0,
+			0.0
+		],
+		"testName": [
+			"constant3k",
+			"constant4.8k"
+		],
+		"torqueRecogFlag": [
+			0,
+			0
+		],
+		"wait_time":[
+			0,
+			0
+		],
+		"order":[
+			[0],
+			[0]
+		]
+	},
+	"ssaCalcInfo": {
+		"gearRatio": [
+			1.0
+		],
+		"gears": [
+			[
+				1,
+				1
+			]
+		],
+		"onInputShaft": 1,
+		"viewInputShaft": 1
+	},
+	"taskInfo": {
+		"bufferSize": 1000000,
+		"channelNames": [
+			"Sin",
+			"Cos",
+			"Vib1",
+			"Vib2"
+		],
+		"channelType": [
+			"Volt",
+			"Volt",
+			"Accel",
+			"Accel"
+		],
+		"current_excit_val": [
+			1.0,
+			1.0,
+			0.004,
+			0.004
+		],
+		"lineScale": {
+			"flag": [
+				0,
+				0,
+				0,
+				0
+			],
+			"intercept": [
+				0.0,
+				0.0,
+				0.0,
+				0.0
+			],
+			"scaleUnits": [
+				"V",
+				"V",
+				"V",
+				"Nm"
+			],
+			"slope": [
+				0.0,
+				0.0,
+				0.0,
+				100.0
+			]
+		},
+		"maxVal": [
+			10,
+			10,
+			500,
+			500
+		],
+		"minVal": [
+			-10,
+			-10,
+			-500,
+			-500
+		],
+		"physicalChannels": [
+			"ai0",
+			"ai1",
+			"ai2",
+			"ai3"
+		],
+		"sampleRate": 102400,
+		"sampsPerChan": 8192,
+		"sensitivity": [
+			1.0,
+			1.0,
+			9.85,
+			9.85
+		],
+		"timeout": 400,
+		"units": [
+			"Volts",
+			"Volts",
+			"g",
+			"g"
+		]
+	},
+	"timeDomainCalcInfo": [
+		{
+			"vibrationIndicatorList": [
+				{
+					"ename": "RMS",
+					"cname": "中文一",
+					"value": "1",
+					"desc": "描述1"
+				},
+				{
+					"ename": "Crest",
+					"cname": "中文二",
+					"value": "2",
+					"desc": "描述2"
+				},
+				{
+					"ename": "Kurtosis",
+					"cname": "中文三",
+					"value": "3",
+					"desc": "描述3"
+				}
+			],
+			"soundIndicatorList": [
+				{
+					"ename": "SPL",
+					"cname": "中文一",
+					"value": "1",
+					"desc": "描述1"
+				},
+				{
+					"ename": "Crest",
+					"cname": "中文二",
+					"value": "2",
+					"desc": "描述2"
+				},
+				{
+					"ename": "Kurtosis",
+					"cname": "中文三",
+					"value": "3",
+					"desc": "描述3"
+				}
+			],
+			"calRate": 10
+		},
+		{
+			"vibrationIndicatorList": [
+				{
+					"ename": "RMS",
+					"cname": "中文一",
+					"value": "1",
+					"desc": "描述1"
+				},
+				{
+					"ename": "Crest",
+					"cname": "中文二",
+					"value": "2",
+					"desc": "描述2"
+				},
+				{
+					"ename": "Kurtosis",
+					"cname": "中文三",
+					"value": "3",
+					"desc": "描述3"
+				}
+			],
+			"soundIndicatorList": [
+				{
+					"ename": "SPL",
+					"cname": "中文一",
+					"value": "1",
+					"desc": "描述1"
+				},
+				{
+					"ename": "Crest",
+					"cname": "中文二",
+					"value": "2",
+					"desc": "描述2"
+				},
+				{
+					"ename": "Kurtosis",
+					"cname": "中文三",
+					"value": "3",
+					"desc": "描述3"
+				}
+			],
+			"calRate": 10
+		}
+	],
+	"timeFreqMapCalcInfo": {
+		"freqMax": 25000,
+		"nfft": 10000,
+		"noverlap": 5000,
+		"nperseg": 10000,
+		"window": "hanning"
+	},
+	"simuInfo": {
+		"fileFolder": "D:/qdaq/Simu"
+	}
+}
