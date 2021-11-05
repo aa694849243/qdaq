@@ -503,7 +503,7 @@ def read_json(filename, flag=0):
         data = pickle.loads(open(filename, "rb").read())
     else:
         # 直接读取
-        with open(filename, 'r') as f:
+        with open(filename, 'r',encoding='UTF-8') as f:
             data = json.load(f)
             f.close()
     return data
