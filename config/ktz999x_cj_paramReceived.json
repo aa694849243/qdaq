@@ -304,7 +304,7 @@
 	"speedCalcInfo": [
 		{
 			"name": "转速计算信息1",
-			"speedSource": "ttl",
+			"speedSignal": "ttl",
 			"averageNum": 64,
 			"coils": 4,
 			"overlap": 62,
@@ -315,7 +315,7 @@
 		},
 		{
 			"name": "转速计算信息1",
-			"speedSource": "ttl",
+			"speedSignal": "ttl",
 			"averageNum": 64,
 			"coils": 4,
 			"overlap": 62,

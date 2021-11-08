@@ -1,6 +1,6 @@
 import numpy as np
 from scipy import signal, stats
-
+import os
 
 ref_g = 1e-6 / 9.8  # accel unit: m/s^2
 # 声压信号参考值
@@ -94,7 +94,7 @@ def task_info_update(task_info):
     task_info['targetChan'] = list()
     # 获取振动或声音通道的原始单位
     task_info['sensorUnit'] = list()
-    task_info['indicatorsUnitChanIndex']=list()
+    task_info['indicatorsUnitChanIndex'] = list()
     for channel_index, channel_name in enumerate(task_info['channelNames']):
         if channel_name.startswith('Vib'):
             task_info['indicatorsUnitChanIndex'].append(channel_index)
@@ -158,7 +158,7 @@ def speed_recog_info_update(speed_recog_info):
     if 'speedRange' not in speed_recog_info.keys():
         speed_recog_info['speedRange'] = 100
 
-    speed_recog_info['overallMinSpeed']=min(speed_recog_info["startSpeed"])
+    speed_recog_info['overallMinSpeed'] = min(speed_recog_info["startSpeed"])
     # 对于恒速电机，要更新时间
     if "waitTime" in speed_recog_info.keys():
         speed_recog_info["startTime"] = list()
@@ -216,7 +216,6 @@ def time_domain_calc_info_update(time_domian_calc_info, task_info, basic_info):
 
     # return time_domian_calc_info
 
-
     if "Speed" in time_domian_calc_info['vibrationIndicatorList']:
         time_domian_calc_info['vibrationIndicatorList'].remove("Speed")
     if "Speed" in time_domian_calc_info['soundIndicatorList']:
@@ -249,8 +248,6 @@ def time_domain_calc_info_update(time_domian_calc_info, task_info, basic_info):
     time_domian_calc_info['xUnit'] = xUnit
     time_domian_calc_info['calSize'] = int(task_info["sampleRate"] / time_domian_calc_info["calRate"])
     return time_domian_calc_info
-
-
 
 
 def order_spectrum_calc_info_update(order_spectrum_calc_info, speed_calc_info, min_speed,
@@ -497,7 +494,7 @@ def stat_factor_calc_info_update(stat_factor_calc_info, ssa_calc_info,
                     1 - stat_factor_calc_info['overlapRatio']))
     stat_factor_calc_info['indicatorUnit'] = list()
     stat_factor_calc_info['refValue'] = task_info['refValue']
-    stat_factor_calc_info['indicatorNestedList'] =list()
+    stat_factor_calc_info['indicatorNestedList'] = list()
 
     # if "Speed" in stat_factor_calc_info["indicatorList"]:
     #     stat_factor_calc_info["indicatorList"].remove("Speed")
@@ -534,7 +531,7 @@ def stat_factor_calc_info_update(stat_factor_calc_info, ssa_calc_info,
         elif channel_name.lower().startswith('mic') or channel_name.lower().startswith("umic"):
             stat_factor_calc_info["indicatorNestedList"].append(
                 stat_factor_calc_info['soundIndicatorList'])
-    for i,unit_index in enumerate(task_info["indicatorsUnitChanIndex"]):
+    for i, unit_index in enumerate(task_info["indicatorsUnitChanIndex"]):
         temp_unit_list = list()
         for indicator in stat_factor_calc_info['indicatorNestedList'][i]:
             if indicator == 'RMS':
@@ -550,8 +547,18 @@ def stat_factor_calc_info_update(stat_factor_calc_info, ssa_calc_info,
                 temp_unit_list.append('')
         stat_factor_calc_info['indicatorUnit'].append(temp_unit_list)
     stat_factor_calc_info['gearName'] = ssa_calc_info['gearName']
-    stat_factor_calc_info['indicatorNum'] =[len(indicatorList) for indicatorList in stat_factor_calc_info["indicatorNestedList"]]
+    stat_factor_calc_info['indicatorNum'] = [len(indicatorList) for indicatorList in
+                                             stat_factor_calc_info["indicatorNestedList"]]
     stat_factor_calc_info['xName'] = xName
     stat_factor_calc_info['xUnit'] = xUnit
 
     return stat_factor_calc_info
+
+
+if __name__ == '__main__':
+    import os
+    from common_info import config_folder, config_file, encrypt_flag
+    import time
+
+    type_info = "ktz999x_cj"
+    config_filename = os.path.join(config_folder, "_".join([type_info, config_file]))

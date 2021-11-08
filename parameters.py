@@ -75,6 +75,7 @@ def task_info_update(task_info):
     功能：完善数据采集信息，主要是结合本地配置文件（config.ini）完善采集设备信息
     返回：更新后的NI DAQmx数据采集任务配置信息
     """
+    task_info = defaultdict(list, task_info)
     # 参考振动值
     ref_g = 1e-6 / 9.8  # unit: m/s^2
     # 参考声压
@@ -84,8 +85,6 @@ def task_info_update(task_info):
             [ni_device, task_info["physicalChannels"][i]])
     # 根据通道名称更新单位索引信息(目前只支持振动信号（Vib开头）和声压信号（Mic开头）),索引信息的数量最终会与基础信息里的传感器数量一致
     task_info['indicatorsUnitChanIndex'] = list()
-    task_info['refValue'] = list()
-    task_info['sensorChan'] = list()
     for channel_index, channel_name in enumerate(task_info['channelNames']):
         if channel_name.lower().startswith('vib'):
             task_info['indicatorsUnitChanIndex'].append(channel_index)
@@ -122,6 +121,7 @@ def task_info_update(task_info):
         task_info['speedFlag'] = 1
     else:
         task_info['speedFlag'] = 0
+    task_info['sensorName'] = [name for name in task_info['channelNames'] if name.lower()[:3] in ('mic', 'umi', 'vib')]
     return task_info
 
 
@@ -147,7 +147,7 @@ def speed_calc_info_update(speed_calc_info):
             speed_calc_info[i]['overlap'] = 0
             speed_calc_info[i]['resampleFactor'] = speed_calc_info[i]['averageNum']
         # 确认转速比
-        if 'speedRatio' not in speed_calc_info[i].keys():
+        if 'speedRatio' not in speed_calc_info[i]:
             # 若没有设置转速比则默认是1.0
             speed_calc_info[i]['speedRatio'] = 1.0
         if speed_calc_info[i]['speedRatio'] <= 0:
@@ -239,7 +239,7 @@ def speed_recog_info_update(speed_recog_info):
                 speed_recog_info['initial_indicator_diagnostic'].append(
                     coast_initial_indicator_diagnostic)
     speed_recog_info['overallMinSpeed'] = min(speed_recog_info['minSpeed'])
-    speed_recog_info["test_count_except_dummy"] = speed_recog_info['notDummyFlag'].count(1)
+    speed_recog_info["test_count_except_dummy"] = sum(speed_recog_info['notDummyFlag'])
 
     # 对于恒速电机，要更新时间
     if "waitTime" in speed_recog_info:
@@ -591,57 +591,41 @@ def stat_factor_calc_info_update(stat_factor_calc_info, order_spectrum_calc_info
         # 基于角度域重采样后的振动信号
         stat_factor_calc_info[i]['sampleRate'] = round(1 / order_spectrum_calc_info[i]['dr_af'])
         temp_num = int(stat_factor_calc_info[i]['revNum'] / order_spectrum_calc_info[i]['dr_af'])
-        gearRatio_vib = list(
-            set(pluck('value', stat_factor_calc_info[i]["vibrationIndicatorList"])) | {speedSourceOrder})
         if stat_factor_calc_info[i]["vibrationIndicatorList"]:
             for j in range(len(stat_factor_calc_info[i]['vibrationIndicatorList'])):
                 stat_factor_calc_info[i]['vibrationIndicatorList'][j]['pointsNum'] = round(
-                    temp_num ** 2 / stat_factor_calc_info[i]['vibrationIndicatorList'][j]['value'])
+                    temp_num * speedSourceOrder / stat_factor_calc_info[i]['vibrationIndicatorList'][j]['value'])
                 stat_factor_calc_info[i]['vibrationIndicatorList'][j]['stepPoints'] = round(
                     stat_factor_calc_info[i]['vibrationIndicatorList'][j]['pointsNum'] * (
                             1 - stat_factor_calc_info[i]['overlapRatio']))
 
                 # 其它轴每转过revNum，转速来源轴转了多少圈
-                stat_factor_calc_info[i]['revNums'].append(
-                    stat_factor_calc_info[i]['revNum'] * np.prod(ssa_calc_info['gearRatio'][:i + 1]) / np.prod(
-                        ssa_calc_info['gearRatio'][:ssa_calc_info['shaftIndex'] + 1]))
-                stat_factor_calc_info[i]['stepNums'].append(stat_factor_calc_info[i]['revNums'][i] * (
-                        1 - stat_factor_calc_info[i]['overlapRatio']))
-        stat_factor_calc_info[i]['indicatorUnit'] = list()
-        stat_factor_calc_info[i]['refValue'] = task_info['refValue']
-        stat_factor_calc_info[i]['indicatorNestedList'] = list()
-        if "Speed" in stat_factor_calc_info["soundIndicatorList"]:
-            stat_factor_calc_info["soundIndicatorList"].remove("Speed")
-        if "Speed" in stat_factor_calc_info["vibrationIndicatorList"]:
-            stat_factor_calc_info["vibrationIndicatorList"].remove("Speed")
-        for channel_index, channel_name in enumerate(task_info['channelNames']):
-            if channel_name.lower().startswith('vib'):
-                stat_factor_calc_info["indicatorNestedList"].append(
-                    stat_factor_calc_info['vibrationIndicatorList'])
-            elif channel_name.lower().startswith('mic') or channel_name.lower().startswith("umic"):
-                stat_factor_calc_info["indicatorNestedList"].append(
-                    stat_factor_calc_info['soundIndicatorList'])
-        for i, unit_index in enumerate(task_info["indicatorsUnitChanIndex"]):
-            temp_unit_list = list()
-            for indicator in stat_factor_calc_info['indicatorNestedList'][i]:
-                if indicator == 'RMS':
-                    if basic_info['dBFlag']:
-                        temp_unit_list.append('dB')
-                    else:
-                        temp_unit_list.append(task_info['units'][unit_index])
-                elif indicator == 'SPL(A)':
-                    temp_unit_list.append('dB(A)')
-                elif indicator == 'SPL':
-                    temp_unit_list.append('dB')
-                else:
-                    temp_unit_list.append('')
-            stat_factor_calc_info['indicatorUnit'].append(temp_unit_list)
-        stat_factor_calc_info['gearName'] = ssa_calc_info['gearName']
-        stat_factor_calc_info['indicatorNum'] = [len(indicatorList) for indicatorList in
-                                                 stat_factor_calc_info["indicatorNestedList"]]
-        stat_factor_calc_info['xName'] = xName
-        stat_factor_calc_info['xUnit'] = xUnit
+                stat_factor_calc_info[i]['vibrationIndicatorList'][j]['revNums'] = speedSourceOrder / \
+                                                                                   stat_factor_calc_info[i][
+                                                                                       'vibrationIndicatorList'][j][
+                                                                                       'value']
+                stat_factor_calc_info[i]['vibrationIndicatorList'][j]['stepNums'] = \
+                    stat_factor_calc_info[i]['vibrationIndicatorList'][j]['revNums'] * (
+                            1 - stat_factor_calc_info[i]['overlapRatio'])
+        if stat_factor_calc_info[i]["soundIndicatorList"]:
+            for j in range(len(stat_factor_calc_info[i]['soundIndicatorList'])):
+                stat_factor_calc_info[i]['soundIndicatorList'][j]['pointsNum'] = round(
+                    temp_num * stat_factor_calc_info[i]['soundIndicatorList'][j]['value'] / speedSourceOrder)
+                stat_factor_calc_info[i]['soundIndicatorList'][j]['stepPoints'] = round(
+                    stat_factor_calc_info[i]['soundIndicatorList'][j]['pointsNum'] * (
+                            1 - stat_factor_calc_info[i]['overlapRatio']))
 
+                # 其它轴每转过revNum，转速来源轴转了多少圈
+                stat_factor_calc_info[i]['soundIndicatorList'][j]['revNums'] = speedSourceOrder / \
+                                                                               stat_factor_calc_info[i][
+                                                                                   'soundIndicatorList'][j][
+                                                                                   'value']
+                stat_factor_calc_info[i]['soundIndicatorList'][j]['stepNums'] = \
+                    stat_factor_calc_info[i]['soundIndicatorList'][j]['revNums'] * (
+                            1 - stat_factor_calc_info[i]['overlapRatio'])
+        stat_factor_calc_info[i]['refValue'] = task_info['refValue']
+        stat_factor_calc_info[i]['xName'] = xName
+        stat_factor_calc_info[i]['xUnit'] = xUnit
     return stat_factor_calc_info
 
 
@@ -786,11 +770,10 @@ if __name__ == '__main__':
             print("speed recog info:", param.speedRecogInfo)
             print("time domain calc info:", param.timeDomainCalcInfo)
             print("order spectrum calc info:", param.orderSpectrumCalcInfo)
-            if param.speedCalcInfo['speedRatio'] != 1:
-                print("raw max order:{}, converted max order:{}".format(
-                    param.orderSpectrumCalcInfo['order'][-1],
-                    param.orderSpectrumCalcInfo['convertOrder'][
-                        -1]))
+            for i in range(param.speedRecogInfo["test_count_except_dummy"]):
+                if param.speedCalcInfo[i]['speedRatio'] != 1:
+                    print(
+                        f"test section {i}:raw max order:{param.orderSpectrumCalcInfo[i]['order'][-1]}, converted max order:{param.orderSpectrumCalcInfo[i]['convertOrder'][-1]}")
             print("order cutting calc info:", param.orderCutCalcInfo)
             print("1D order indicators calc info:", param.onedOSCalcInfo)
             print("cepstrum calc info:", param.cepstrumCalcInfo)
@@ -800,7 +783,7 @@ if __name__ == '__main__':
             print("simu info:", param.simuInfo)
             print("filter info:", param.filterInfo)
             print("time freq map info:", param.timeFreqMapCalcInfo)
-            print("ssa calc info:", param.ssaCalcInfo)
+            # print("ssa calc info:", param.ssaCalcInfo)
             print("stat factor calc info:", param.statFactorCalcInfo)
             print("time domain calc info confirm:", param.timeDomainCalcInfo)
         print('cost time: ', time.perf_counter() - t1)

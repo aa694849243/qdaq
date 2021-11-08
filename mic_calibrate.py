@@ -25,6 +25,6 @@ def cal_sensity(p, array) -> float:
     p: 声压
     array: 传入的数组
     """
-    return np.sqrt(np.sum(np.power(array, 2)) / len(array)) / p
+    return np.sqrt(np.sum(np.square(array)) / len(array)) / p
 
 

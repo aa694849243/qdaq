@@ -6,7 +6,7 @@
 @Email  : qxu@sonustc.com
 @Function: real time speed recognition and NVH calculation
 """
-
+#todo dt板卡暂时不管
 import atexit
 import numpy as np
 from uldaq import (get_daq_device_inventory, DaqDevice, AInScanFlag,
