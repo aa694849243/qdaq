@@ -207,9 +207,7 @@ def read_raw_data(filename, channel_names, file_type='tdms'):
         with h5py.File(filename, 'r') as h5pyFile:
             data_group = h5pyFile['AIData']
             for channel_name in channel_names:
-                raw_data[channel_name] = list(
-                    # np.array(data_group[channel_name][11000000:19000000], dtype='float'))
-                    np.array(data_group[channel_name], dtype='float'))
+                raw_data[channel_name] = np.array(data_group[channel_name], dtype='float')
     return raw_data
 
 def bit24_to_int(byte_data):

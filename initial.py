@@ -192,7 +192,7 @@ def create_empty_twodtd(time_domain_calc_info, sensor_index, indicator_diagnosti
     return twodtd_result
 
 
-def create_empty_twodtd_for_share(time_domain_calc_info, sensor_index, max_len, indicator_diagnostic=-1):
+def create_empty_twodtd_for_share(time_domain_calc_info, sensor_index, sensor_name, max_len, indicator_diagnostic=-1):
     """
     :param
     功能：初始化二维时间域指标，用于实时更新（共享内存模式）
@@ -203,17 +203,17 @@ def create_empty_twodtd_for_share(time_domain_calc_info, sensor_index, max_len, 
     4. 初始评判结果，可以指定的值进行初始化
     返回：不包含具体数值的二维时间域结果
     """
-    twodtd_result = list()
-    for i, indicator in enumerate(time_domain_calc_info['indicatorNestedList'][sensor_index]):
-        twodtd_result.append({
-            'xName': time_domain_calc_info['xName'],
-            'xUnit': time_domain_calc_info['xUnit'],
+    twodtd_result = {}
+    for info in time_domain_calc_info[sensor_name]:
+        twodtd_result[tuple(info['value'])] = {
+            'xName': info['xName'],
+            'xUnit': info['xUnit'],
             'xValue': np.zeros(max_len),
-            'yName': indicator,
-            'yUnit': time_domain_calc_info['indicatorUnit'][sensor_index][i],
+            'yName': info['index'],
+            'yUnit': info['unit'][0] if len(info['unit']) > 1 else info['unit'][sensor_index],
             'yValue': [None] * max_len,
             "indicatorDiagnostic": indicator_diagnostic
-        })
+        }
     return twodtd_result
 
 
@@ -410,7 +410,7 @@ def create_empty_threedos(order_spectrum_calc_info, task_info, sensor_index, db_
     return threedos_result
 
 
-def create_empty_threedos_for_share(order_spectrum_calc_info, task_info, sensor_index, os_max_len,
+def create_empty_threedos_for_share(order_spectrum_calc_info, task_info, sensor_index, sensor_name, os_max_len,
                                     db_flag=0, indicator_diagnostic=-1):
     """
     功能：初始化三维阶次谱结果，用于实时阶次谱结果记录更新
@@ -619,7 +619,7 @@ def create_empty_tempsf(stat_factor_calc_info):
     return tempsf_result
 
 
-def create_empty_twodsf_for_share(stat_factor_calc_info, sensor_index, rsp_max_len,
+def create_empty_twodsf_for_share(stat_factor_calc_info, sensor_index, sensor_name, rsp_max_len,
                                   indicator_diagnostic=-1):
     """
     功能：初始化按圈计算的统计学指标结果，用于实时更新
@@ -630,26 +630,25 @@ def create_empty_twodsf_for_share(stat_factor_calc_info, sensor_index, rsp_max_l
     4. 初始化的评判结果，默认是为-1（表示缺失）
     返回：包含结构但不包含具体数值的按圈计算结果
     """
-    twodsf_result = list()
-    if not stat_factor_calc_info['indicatorNestedList'][sensor_index]:
+    twodsf_result = {}
+    if not stat_factor_calc_info:
         return twodsf_result
-    for k, gearName in enumerate(stat_factor_calc_info['gearName']):
+    for statInfo in stat_factor_calc_info[sensor_name]:
         # 计算得到可以进行多少次计算（即二维按圈计算结果的长度）
-        max_len = rsp_max_len // stat_factor_calc_info['stepPoints'][k] + 1
-        for i, indicator in enumerate(stat_factor_calc_info['indicatorNestedList'][sensor_index]):
-            twodsf_result.append({
-                'xName': stat_factor_calc_info['xName'],
-                'xUnit': stat_factor_calc_info['xUnit'],
-                'xValue': np.zeros(max_len),
-                'yName': '-'.join([gearName, indicator]),
-                'yUnit': stat_factor_calc_info['indicatorUnit'][sensor_index][i],
-                'yValue': [None] * max_len,
-                "indicatorDiagnostic": indicator_diagnostic
-            })
-    return twodsf_result
+        max_len = rsp_max_len // statInfo['stepPoints'] + 1
+        twodsf_result[tuple(statInfo['value'])] = {'xName': statInfo['xName'],
+                                                   'xUnit': statInfo['xUnit'],
+                                                   'xValue': np.zeros(max_len),
+                                                   'yName': statInfo['index'],
+                                                   'yUnit': statInfo['unit'][0] if len(statInfo['unit']) == 1 else
+                                                   statInfo['unit'][sensor_index],
+                                                   'yValue': [None] * max_len,
+                                                   "indicatorDiagnostic": indicator_diagnostic
+                                                   }
+        return twodsf_result
 
 
-def create_empty_twodsf_for_const(stat_factor_calc_info, sensor_index, max_circle,indicator_diagnostic=-1):
+def create_empty_twodsf_for_const(stat_factor_calc_info, sensor_index, max_circle, indicator_diagnostic=-1):
     """
     功能：初始化按圈计算的统计学指标结果，用于实时更新，恒速电机版
     输入：计算参数信息
@@ -673,7 +672,7 @@ def create_empty_twodsf_for_const(stat_factor_calc_info, sensor_index, max_circl
     return twodsf_result
 
 
-def create_empty_tempsf_for_share(stat_factor_calc_info,sensor_index, rspMaxLen):
+def create_empty_tempsf_for_share(stat_factor_calc_info, sensor_index, sensor_name, rspMaxLen):
     """
     功能：初始化按圈计算的统计学指标临时结果，用于最后计算一维指标
     输入：
@@ -687,24 +686,20 @@ def create_empty_tempsf_for_share(stat_factor_calc_info,sensor_index, rspMaxLen)
     每个轴都有相应的结果，所以是按gear name保存的
     """
     tempsf_result = dict()
-    if not set(stat_factor_calc_info['indicatorNestedList'][sensor_index]):
+    if not stat_factor_calc_info:
         return tempsf_result
-    for i, gearName in enumerate(stat_factor_calc_info['gearName']):
-        maxLen = rspMaxLen // stat_factor_calc_info['stepPoints'][i] + 1
-        tempsf_result[gearName] = dict()
-        tempsf_result[gearName]['xi2'] = np.zeros(maxLen)
-        tempsf_result[gearName]['xmax'] = np.zeros(maxLen)
-        tempsf_result[gearName]['xmean'] = np.zeros(maxLen)
-        tempsf_result[gearName]['xi3'] = np.zeros(maxLen)
-        tempsf_result[gearName]['xi4'] = np.zeros(maxLen)
-        tempsf_result[gearName]['xi2_A'] = np.zeros(maxLen)
+    for statInfo in stat_factor_calc_info[sensor_name]:
+        maxLen = rspMaxLen // stat_factor_calc_info['stepPoints'] + 1
+        tempsf_result[tuple(statInfo['value'])] = {key: np.zeros(maxLen) for key in
+                                                   ('xi2', 'xmax', 'xmean', 'xi3', 'xi4', 'xi2_A')}
         # 事先开辟了足够的内存，index为下一个需要赋值的索引，
         # 该值与同一根轴上下一个twodsf需要赋值的索引相同，也与下面的
-        tempsf_result[gearName]['tempsf_index'] = 0
-        tempsf_result[gearName]['counter'] = 0
+        tempsf_result[tuple(statInfo['value'])]['tempsf_index'] = 0
+        tempsf_result[tuple(statInfo['value'])]['counter'] = 0
     return tempsf_result
 
-def create_empty_tempsf_for_const(stat_factor_calc_info,sensor_index,max_circle):
+
+def create_empty_tempsf_for_const(stat_factor_calc_info, sensor_index, max_circle):
     """
     功能：初始化按圈计算的统计学指标临时结果，用于最后计算一维指标,恒速电机版
     输入：计算参数信息
@@ -732,7 +727,7 @@ def create_empty_tempsf_for_const(stat_factor_calc_info,sensor_index,max_circle)
         # 该值与同一根轴上下一个twodsf需要赋值的索引相同，也与下面的
         tempsf_result[gearName]['tempsf_index'] = 0
         tempsf_result[gearName]['counter'] = 0
-        tempsf_result[gearName]["lastRevIndex"]=0
+        tempsf_result[gearName]["lastRevIndex"] = 0
     return tempsf_result
 
 
@@ -771,13 +766,16 @@ if __name__ == '__main__':
             test_result['resultData'][sensor_i]['dataSection'][test_i]['twodOC'] = create_empty_twodoc(
                 param.orderCutCalcInfo,
                 param.taskInfo, sensor_i,
-                param.basicInfo['dBFlag'], indicator_diagnostic=param.speedRecogInfo['initial_indicator_diagnostic'][test_i])
+                param.basicInfo['dBFlag'],
+                indicator_diagnostic=param.speedRecogInfo['initial_indicator_diagnostic'][test_i])
             test_result['resultData'][sensor_i]['dataSection'][test_i]['twodOS'] = create_empty_twodos(
                 param.taskInfo, sensor_i,
-                param.basicInfo['dBFlag'], indicator_diagnostic=param.speedRecogInfo['initial_indicator_diagnostic'][test_i])
+                param.basicInfo['dBFlag'],
+                indicator_diagnostic=param.speedRecogInfo['initial_indicator_diagnostic'][test_i])
             pprint.pprint(test_result)
             pprint.pprint(create_empty_threedos(param.orderSpectrumCalcInfo, param.taskInfo, sensor_i,
-                                                param.basicInfo['dBFlag'], indicator_diagnostic=param.speedRecogInfo['initial_indicator_diagnostic'][test_i]))
+                                                param.basicInfo['dBFlag'], indicator_diagnostic=
+                                                param.speedRecogInfo['initial_indicator_diagnostic'][test_i]))
             freq = list([1, 2, 3, 4])
             pprint.pprint(
                 create_empty_threedtfm(param.timeFreqMapCalcInfo, freq, param.taskInfo, sensor_i,

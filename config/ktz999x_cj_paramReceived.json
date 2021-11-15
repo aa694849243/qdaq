@@ -6,7 +6,7 @@
 			"sensor02"
 		],
 		"systemNo": "BYDDM",
-		"type": "KTZ66X32S_7",
+		"type": "ktz999x_cj_7",
 		"unit": "g"
 	},
 	"dataSaveFlag": {
@@ -67,7 +67,8 @@
 			],
 			"overlapRev": 0,
 			"revNum": 3,
-			"speedSourceOrder": 1
+			"speedSourceOrder": 1,
+			"testSectionIndex": 0
 		},
 		{
 			"vibrationIndicatorList": [
@@ -112,7 +113,8 @@
 			],
 			"overlapRev": 0,
 			"revNum": 3,
-			"speedSourceOrder": 1
+			"speedSourceOrder": 1,
+			"testSectionIndex": 1
 		}
 	],
 	"limitCompareFlag": {
@@ -304,25 +306,27 @@
 	"speedCalcInfo": [
 		{
 			"name": "转速计算信息1",
-			"speedSignal": "ttl",
+			"speedSignal": "resolver",
 			"averageNum": 64,
 			"coils": 4,
 			"overlap": 62,
 			"ppr": 32,
 			"speedRatio": 1.0,
 			"triggerLevel": 0.5,
-			"triggerMode": "Rising"
+			"triggerMode": "Rising",
+			"channelName": ["Sin"]
 		},
 		{
 			"name": "转速计算信息1",
-			"speedSignal": "ttl",
+			"speedSignal": "resolver",
 			"averageNum": 64,
 			"coils": 4,
 			"overlap": 62,
 			"ppr": 32,
 			"speedRatio": 1.0,
 			"triggerLevel": 0.5,
-			"triggerMode": "Rising"
+			"triggerMode": "Rising",
+			"channelName": ["Sin"]
 		}
 	],
 	"speedRecogInfo": {
@@ -400,21 +404,21 @@
 	"taskInfo": {
 		"bufferSize": 1000000,
 		"channelNames": [
-			"Sin",
 			"Cos",
-			"Vib1",
-			"Vib2"
+			"Mic1",
+			"Sin",
+			"Vib1"
 		],
 		"channelType": [
 			"Volt",
+			"Sound",
 			"Volt",
-			"Accel",
 			"Accel"
 		],
 		"current_excit_val": [
 			1.0,
-			1.0,
 			0.004,
+			1.0,
 			0.004
 		],
 		"lineScale": {
@@ -465,15 +469,15 @@
 		"sampsPerChan": 8192,
 		"sensitivity": [
 			1.0,
-			1.0,
 			9.85,
+			1.0,
 			9.85
 		],
 		"timeout": 400,
 		"units": [
 			"Volts",
+			"Pa",
 			"Volts",
-			"g",
 			"g"
 		]
 	},

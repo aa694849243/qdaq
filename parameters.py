@@ -316,30 +316,19 @@ def time_domain_calc_info_update(time_domian_calc_info, task_info, basic_info):
             time_domian_calc_info['vibrationIndicatorList'].pop("Speed")
         if "Speed" in time_domian_calc_info[i]['soundIndicatorList']:
             time_domian_calc_info['soundIndicatorList'].pop("Speed")
-
-        for channel_index, channel_name in enumerate(task_info['channelNames']):
-            if channel_name.lower().startswith('vib'):
-                time_domian_calc_info[i]["indicatorNestedList"].append(
-                    time_domian_calc_info[i]['vibrationIndicatorList'])
-            elif channel_name.lower().startswith('mic') or channel_name.lower().startswith("umic"):
-                time_domian_calc_info[i]["indicatorNestedList"].append(
-                    time_domian_calc_info[i]['soundIndicatorList'])
-
-        for j, unit_index in enumerate(task_info["indicatorsUnitChanIndex"]):
-            temp_unit_list = list()
-            for indicator in time_domian_calc_info[i]['indicatorNestedList'][j]:
-                if indicator['index'] == 'RMS':
+        for indicator in ['vibrationIndicatorList', 'soundIndicatorList']:
+            for vib_info in time_domian_calc_info[i][indicator]:
+                if vib_info['index'].lower()[:3] == 'rms':
                     if basic_info['dBFlag']:
-                        temp_unit_list.append('dB')
+                        vib_info['unit'] = ['dB']
                     else:
-                        temp_unit_list.append(task_info['units'][unit_index])
-                elif indicator['index'] == 'SPL(A)':
-                    temp_unit_list.append('dB(A)')
-                elif indicator['index'] == 'SPL':
-                    temp_unit_list.append('dB')
+                        vib_info['unit'] = [task_info['units'][k] for k in task_info['indicatorsUnitChanIndex']]
+                elif vib_info['index'].lower()[:6] == 'spl(a)': #todo 继续
+                    vib_info['unit'] = ['dB(A)']
+                elif vib_info['index'].lower()[:3] == 'spl':
+                    vib_info['unit'] = ['dB']
                 else:
-                    temp_unit_list.append('')
-            time_domian_calc_info[i]['indicatorUnit'].append(temp_unit_list)
+                    vib_info['unit'] = ['']
         time_domian_calc_info[i]['xName'] = xName
         time_domian_calc_info[i]['xUnit'] = xUnit
         time_domian_calc_info[i]['calSize'] = int(task_info["sampleRate"] / time_domian_calc_info[i]["calRate"])
@@ -573,6 +562,9 @@ def stat_factor_calc_info_update(stat_factor_calc_info, order_spectrum_calc_info
     """
     # 更新统计学指标按圈计算参数
     for i in range(testSectionNum := len(stat_factor_calc_info)):
+        if i != stat_factor_calc_info[i]['testSectionIndex']:  # 如果测试段对不上则跳过
+            stat_factor_calc_info[i] = defaultdict(list)
+            continue
         stat_factor_calc_info[i] = defaultdict(list, stat_factor_calc_info[i])
         if 'revNum' not in stat_factor_calc_info[i]:
             # 每次计算的圈数未设置则默认为1
@@ -607,6 +599,20 @@ def stat_factor_calc_info_update(stat_factor_calc_info, order_spectrum_calc_info
                 stat_factor_calc_info[i]['vibrationIndicatorList'][j]['stepNums'] = \
                     stat_factor_calc_info[i]['vibrationIndicatorList'][j]['revNums'] * (
                             1 - stat_factor_calc_info[i]['overlapRatio'])
+                if stat_factor_calc_info[i]['vibrationIndicatorList'][j]['index'].lower()[:3] == 'rms':
+                    if basic_info['dBFlag']:
+                        stat_factor_calc_info[i]['vibrationIndicatorList'][j]['unit'] = ['dB']
+                    else:
+                        stat_factor_calc_info[i]['vibrationIndicatorList'][j]['unit'] = [task_info['units'][k] for k in
+                                                                                         task_info[
+                                                                                             'indicatorsUnitChanIndex']]
+                elif stat_factor_calc_info[i]['vibrationIndicatorList'][j]['index'].lower()[:6] == 'spl(a)':
+                    stat_factor_calc_info[i]['vibrationIndicatorList'][j]['unit'] = ['dB(A)']
+                elif stat_factor_calc_info[i]['vibrationIndicatorList'][j]['index'].lower()[:3] == 'spl':
+                    stat_factor_calc_info[i]['vibrationIndicatorList'][j]['unit'] = ['dB']
+                else:
+                    stat_factor_calc_info[i]['vibrationIndicatorList'][j]['unit'] = ['']
+
         if stat_factor_calc_info[i]["soundIndicatorList"]:
             for j in range(len(stat_factor_calc_info[i]['soundIndicatorList'])):
                 stat_factor_calc_info[i]['soundIndicatorList'][j]['pointsNum'] = round(
@@ -623,6 +629,19 @@ def stat_factor_calc_info_update(stat_factor_calc_info, order_spectrum_calc_info
                 stat_factor_calc_info[i]['soundIndicatorList'][j]['stepNums'] = \
                     stat_factor_calc_info[i]['soundIndicatorList'][j]['revNums'] * (
                             1 - stat_factor_calc_info[i]['overlapRatio'])
+                if stat_factor_calc_info[i]['soundIndicatorList'][j]['index'].lower()[:3] == 'RMS':
+                    if basic_info['dBFlag']:
+                        stat_factor_calc_info[i]['soundIndicatorList'][j]['unit'] = ['dB']
+                    else:
+                        stat_factor_calc_info[i]['soundIndicatorList'][j]['unit'] = [task_info['units'][k] for k in
+                                                                                     task_info[
+                                                                                         'indicatorsUnitChanIndex']]
+                elif stat_factor_calc_info[i]['soundIndicatorList'][j]['index'].lower()[:6] == 'spl(a)':
+                    stat_factor_calc_info[i]['soundIndicatorList'][j]['unit'] = ['dB(A)']
+                elif stat_factor_calc_info[i]['soundIndicatorList'][j]['index'].lower()[:3] == 'spl':
+                    stat_factor_calc_info[i]['soundIndicatorList'][j]['unit'] = ['dB']
+                else:
+                    stat_factor_calc_info[i]['soundIndicatorList'][j]['unit'] = ['']
         stat_factor_calc_info[i]['refValue'] = task_info['refValue']
         stat_factor_calc_info[i]['xName'] = xName
         stat_factor_calc_info[i]['xUnit'] = xUnit

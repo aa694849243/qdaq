@@ -22,6 +22,7 @@ import time
 from numpy import pi, convolve
 from scipy.signal.filter_design import bilinear
 from common_info import qDAQ_logger
+from cytoolz import pluck
 import matplotlib.pyplot as plt
 
 
@@ -380,7 +381,7 @@ def db_convertion(data, ref_value):
     return np.around(20 * np.log10(np.abs(data) / ref_value), 2)
 
 
-def oned_time_domain(temptd, calc_size, time_domain_calc_info, sensor_index,
+def oned_time_domain(temptd, calc_size, time_domain_calc_info, sensor_index, sensor_name,
                      db_flag=0):
     """
     功能：计算一维时间域指标（基于二维时间域指标计算的中间量计算得到）
@@ -402,9 +403,9 @@ def oned_time_domain(temptd, calc_size, time_domain_calc_info, sensor_index,
     result(list): the indicator result value(twodTD calculation already finished)
     """
     onedtd_result = list()
-    for i, indicator in enumerate(time_domain_calc_info['indicatorNestedList'][sensor_index]):
+    for i, indicator in enumerate(time_domain_calc_info[sensor_name]):
         # 根据指标名称进行计算
-        if indicator == 'RMS':
+        if indicator['index'].lower()[:3] == 'rms':
             # 是否换算为dB
             if db_flag:
                 temp_oned_rms = db_convertion(oned_rms(temptd, calc_size),
@@ -413,49 +414,49 @@ def oned_time_domain(temptd, calc_size, time_domain_calc_info, sensor_index,
                 target_unit = 'dB'
             else:
                 temp_oned_rms = oned_rms(temptd, calc_size)
-                target_unit = time_domain_calc_info['indicatorUnit'][sensor_index][i]
+                target_unit = indicator['unit'][0] if len(indicator['unit']) == 1 else indicator['unit'][sensor_index]
             onedtd_result.append({
-                'name': 'RMS',
+                'name': indicator['index'],
                 'unit': target_unit,
                 'value': temp_oned_rms,
                 "indicatorDiagnostic": -1
             })
-        elif indicator == 'Crest':
+        elif indicator['index'].lower()[:5] == 'crest':
             onedtd_result.append({
-                'name': 'Crest',
-                'unit': time_domain_calc_info['indicatorUnit'][sensor_index][i],
+                'name': indicator['index'],
+                'unit': indicator['unit'][0] if len(indicator['unit']) == 1 else indicator['unit'][sensor_index],
                 'value': oned_crest(temptd, calc_size),
                 "indicatorDiagnostic": -1
             })
-        elif indicator == 'Kurtosis':
+        elif indicator['index'].lower()[:7] == 'kurtosis':
             onedtd_result.append({
-                'name': 'Kurtosis',
-                'unit': time_domain_calc_info['indicatorUnit'][sensor_index][i],
+                'name': indicator['index'],
+                'unit': indicator['unit'][0] if len(indicator['unit']) == 1 else indicator['unit'][sensor_index],
                 'value': oned_kurtosis(temptd, calc_size),
                 "indicatorDiagnostic": -1
             })
-        elif indicator == 'Skewness':
+        elif indicator['index'].lower()[:7] == 'skewness':
             onedtd_result.append({
-                'name': 'Skewness',
-                'unit': time_domain_calc_info['indicatorUnit'][sensor_index][i],
+                'name': indicator['index'],
+                'unit': indicator['unit'][0] if len(indicator['unit']) == 1 else indicator['unit'][sensor_index],
                 'value': oned_skewness(temptd, calc_size),
                 "indicatorDiagnostic": -1
             })
-        elif indicator == 'SPL':
+        elif indicator['index'].lower()[:3] == 'spl':
             onedtd_result.append({
-                'name': 'SPL',
+                'name': indicator['index'],
                 'unit': 'dB',
                 'value': oned_spl(temptd, calc_size),
                 "indicatorDiagnostic": -1
             })
-        elif indicator == 'SPL(A)':
+        elif indicator['index'].lower()[:6] == 'spl(a)':
             onedtd_result.append({
                 'name': 'SPL(A)',
                 'unit': 'dB(A)',
                 'value': oned_a_spl(temptd, calc_size),
                 "indicatorDiagnostic": -1
             })
-        elif indicator == 'Speed':
+        elif indicator['index'].lower()[:5] == 'speed':
             pass
         else:
             qDAQ_logger.info(
@@ -611,7 +612,7 @@ def twod_time_domain_for_share(vib, last_calc_index, right_index, calc_size,
 
         for j, indicator in enumerate(indicatorList):
             # 计算二维时间域指标（基于指标列表）
-            if indicator == 'RMS':
+            if indicator['index'].lower()[:3] == 'rms':
                 rms_value, xi2 = twodtd_rms(calc_vib, calc_size)
                 # 判断是否需要转换dB
                 if twodtd[j]['yUnit'] == 'dB':
@@ -621,25 +622,21 @@ def twod_time_domain_for_share(vib, last_calc_index, right_index, calc_size,
                 else:
                     twodtd[j]['yValue'][index_twod_td] = rms_value
                 twodtd[j]['xValue'][index_twod_td] = xValue
-            elif indicator == 'Crest':
+            elif indicator['index'].lower()[:5] == 'crest':
                 crest_value, max_value, xi2 = twodtd_crest(calc_vib, calc_size)
                 twodtd[j]['yValue'][index_twod_td] = crest_value
                 twodtd[j]['xValue'][index_twod_td] = xValue
-            elif indicator == 'Kurtosis':
+            elif indicator['index'].lower()[:8] == 'kurtosis':
                 kur_value, mean_value, xi4, xi3, xi2 = twodtd_kurtosis(calc_vib,
                                                                        calc_size)
                 twodtd[j]['yValue'][index_twod_td] = kur_value
                 twodtd[j]['xValue'][index_twod_td] = xValue
-            elif indicator == 'Skewness':
+            elif indicator['index'].lower()[:8] == 'skewness':
                 skew_value, mean_value, xi3, xi2 = twodtd_skewness(calc_vib,
                                                                    calc_size)
                 twodtd[j]['yValue'][index_twod_td] = skew_value
                 twodtd[j]['xValue'][index_twod_td] = xValue
-            elif indicator == "SPL":
-                spl_value, xi2 = twod_spl(calc_vib, calc_size)
-                twodtd[j]['yValue'][index_twod_td] = spl_value
-                twodtd[j]['xValue'][index_twod_td] = xValue
-            elif indicator == "SPL(A)":
+            elif indicator['index'].lower()[:6] == "spl(a)":
                 # 生成A计权滤波器
                 B, A = A_weighting(fs)
                 if calc_size > 500:
@@ -649,31 +646,36 @@ def twod_time_domain_for_share(vib, last_calc_index, right_index, calc_size,
                 spl_value, xi2_A = twod_spl(a_weighting_calc_vib, calc_size)
                 twodtd[j]['yValue'][index_twod_td] = spl_value
                 twodtd[j]['xValue'][index_twod_td] = xValue
-            elif indicator == "Speed":
+            elif indicator['index'].lower()[:3] == "spl":
+                spl_value, xi2 = twod_spl(calc_vib, calc_size)
+                twodtd[j]['yValue'][index_twod_td] = spl_value
+                twodtd[j]['xValue'][index_twod_td] = xValue
+            elif indicator['index'].lower()[:5] == "speed":
                 pass
             else:
                 qDAQ_logger.info(
                     "error, no this indicator calculation for now, please check the indicator name!")
 
         # record the temp value of twodTD，记录二维时间域指标计算的中间量
-        indicatorSet = set(indicatorList)
-        if {'RMS', 'Crest', 'Kurtosis', 'Skewness', 'SPL'} & indicatorSet:
-            # 确认需要记录平方和值xi2，而且需要避免重复记录
-            temptd['xi2'][index_twod_td] = xi2
-        if {'Crest'} & indicatorSet:
-            # 确认需要记录最大值值xmax，而且需要避免重复记录
-            temptd['xmax'][index_twod_td] = max_value
-
-        if {'Kurtosis', 'Skewness'} & indicatorSet:
-            # 确认需要记录三次方和值xi3和平均值xmean，而且需要避免重复记录
-            temptd['xi3'][index_twod_td] = xi3
-            temptd['xmean'][index_twod_td] = mean_value
-        if {'Kurtosis'} & indicatorSet:
-            # 确认需要记录四次方和值xi4，而且需要避免重复记录
-            temptd['xi4'][index_twod_td] = xi4
-        if {'SPL(A)'} & indicatorSet:
-            # 确认需要记录A计权平方和值xi2_A，而且需要避免重复记录
-            temptd['xi2_A'][index_twod_td] = xi2_A
+        indicatorSet = set(pluck('index', indicatorList))
+        for index in indicatorSet:
+            if index.lower()[:3] in ('rms', 'spl') or index.lower()[:5] == 'crest' or index.lower()[:7] in (
+                    'kurtosis', 'skewness'):
+                # 确认需要记录平方和值xi2，而且需要避免重复记录
+                temptd['xi2'][index_twod_td] = xi2
+            if index.lower()[:5] == 'crest':
+                # 确认需要记录最大值值xmax，而且需要避免重复记录
+                temptd['xmax'][index_twod_td] = max_value
+            if index.lower()[:7] in ('kurtosis', 'skewness'):
+                # 确认需要记录三次方和值xi3和平均值xmean，而且需要避免重复记录
+                temptd['xi3'][index_twod_td] = xi3
+                temptd['xmean'][index_twod_td] = mean_value
+            if index.lower()[:7] == 'kurtosis':
+                # 确认需要记录四次方和值xi4，而且需要避免重复记录
+                temptd['xi4'][index_twod_td] = xi4
+            if index.lower()[:6] == 'spl(a)':
+                # 确认需要记录A计权平方和值xi2_A，而且需要避免重复记录
+                temptd['xi2_A'][index_twod_td] = xi2_A
 
         # 最后计算点增加
         last_calc_index += calc_size
@@ -747,13 +749,11 @@ def oned_order_spectrum(twod_os, oned_os_calc_info, task_info,
         # 如果存在阶次谱则进行计算
         order_resolution = twod_os[0]['xValue'][1] - twod_os[0]['xValue'][0]
         yValue_array = twod_os[0]['yValue']
-        for i, order in enumerate(oned_os_calc_info['orderList']):
+        for i, info in enumerate(oned_os_calc_info['indicatorInfoList']['value']):
             index_array = np.around(
-                [[x // order_resolution + k for k in range(-(oned_os_calc_info[
-                                                                 'pointNum'] // 2),
-                                                           oned_os_calc_info[
-                                                               'pointNum'] // 2 + 1)]
-                 for x in order]).astype('int')
+                [[x // order_resolution + k for k in
+                  range(-(oned_os_calc_info['pointNum'] // 2), oned_os_calc_info['pointNum'] // 2 + 1)] for x in
+                 info['value']]).astype('int')
             temp_result = np.sqrt(
                 np.sum(np.power(yValue_array[index_array], 2), axis=1))
 
@@ -768,7 +768,7 @@ def oned_order_spectrum(twod_os, oned_os_calc_info, task_info,
                 target_unit = task_info['units'][
                     task_info["indicatorsUnitChanIndex"][sensor_index]]
             onedos_result.append({
-                'name': oned_os_calc_info['orderName'][i],
+                'name': info['index'],
                 'unit': target_unit,
                 'value': target_value,
                 'indicatorDiagnostic': indicator_diagnostic
@@ -787,31 +787,17 @@ def oned_order_spectrum(twod_os, oned_os_calc_info, task_info,
                                                    'pointNum'] // 2),
                                              modulationDepthCalcInfo[
                                                  'pointNum'] // 2 + 1)]
-                                      for x in [calinfo[
-                                                    "modulationOrder"] * i + modulatedOrder * j
-                                                for i in
-                                                range(1, calinfo[
-                                                    "harmonicCount"] + 1) for j
-                                                in
-                                                list(range(-calinfo[
-                                                    'sideFrequencyCount'],
-                                                           0)) + list(
-                                                    range(1, calinfo[
-                                                        'sideFrequencyCount'] + 1))]]
-
+                                      for x in [calinfo["modulationOrder"] * i + modulatedOrder * j for i in
+                                                range(1, calinfo["harmonicCount"] + 1) for j in
+                                                list(range(-calinfo['sideFrequencyCount'], 0)) + list(
+                                                    range(1, calinfo['sideFrequencyCount'] + 1))]]
                     numerator_array = np.array(numerator_list)
 
                     denominator_list = [[x + order_resolution * k for k in
-                                         range(-(modulationDepthCalcInfo[
-                                                     'pointNum'] // 2),
-                                               modulationDepthCalcInfo[
-                                                   'pointNum'] // 2 + 1)]
-                                        for x in [calinfo[
-                                                      "modulationOrder"] * i + modulatedOrder * j
-                                                  for i in
-                                                  range(1, calinfo[
-                                                      "harmonicCount"] + 1) for
-                                                  j in list([0])]]
+                                         range(-(modulationDepthCalcInfo['pointNum'] // 2),
+                                               modulationDepthCalcInfo['pointNum'] // 2 + 1)] for x in
+                                        [calinfo["modulationOrder"] * i + modulatedOrder * j for i in
+                                         range(1, calinfo["harmonicCount"] + 1) for j in list([0])]]
 
                     # # axis=0 计算每一列的和 axis=1计算每一行的和 np.sum计算每一行的和之后得到一维array
                     # np.sum(np.sqrt(np.sum(np.power(numerator_array,2),axis=1)))
@@ -1207,21 +1193,14 @@ def order_spectrum_for_share(threed_os, twod_oc, counter_or, vibration_rsp,
             # calculate the 2D order cutting(consider that order also should include sub order)
             # 下面的关注阶次切片计算方法与一维阶次切片指标一致，不再做解释
             for i, order in enumerate(order_cut_calc_info['orderList']):
-
                 index_array = np.around([[x // order_resolution + k for k in
-                                          range(-(order_cut_calc_info[
-                                                      'pointNum'] // 2),
-                                                order_cut_calc_info[
-                                                    'pointNum'] // 2 + 1)] for x in
-                                         order]).astype('i')
-                temp_result = np.sqrt(
-                    np.sum(np.power(fvib[index_array], 2), axis=1))
+                                          range(-(order_cut_calc_info['pointNum'] // 2),
+                                                order_cut_calc_info['pointNum'] // 2 + 1)] for x in order]).astype('i')
+                temp_result = np.sqrt(np.sum(np.power(fvib[index_array], 2), axis=1))
 
                 if db_flag:
-                    twod_oc[i]['yValue'][counter_or] = \
-                        db_convertion(rms(temp_result),
-                                      order_spectrum_calc_info['refValue'][
-                                          sensor_index])
+                    twod_oc[i]['yValue'][counter_or] = db_convertion(rms(temp_result),
+                                                                     order_spectrum_calc_info['refValue'][sensor_index])
                 else:
                     twod_oc[i]['yValue'][counter_or] = rms(temp_result)
                 twod_oc[i]['xValue'][counter_or] = x_value
@@ -1238,8 +1217,7 @@ def order_spectrum_for_const(threed_os, twod_oc, counter_or, vibration_rsp,
                              sampleRate,
                              db_flag=0, cut_off_points=0):
     order_resolution = order_spectrum_calc_info['orderResolution']
-    while order_spectrum_calc_info['nfft'] + order_spectrum_calc_info[
-        'nstep'] * counter_or <= len(vibration_rsp):
+    while order_spectrum_calc_info['nfft'] + order_spectrum_calc_info['nstep'] * counter_or <= len(vibration_rsp):
         # 第一部分：计算三维阶次谱
         # 记录目标端数据对应的时间（开始和结束时间）
         # x_value = [
@@ -1825,7 +1803,7 @@ def twod_stat_factor(twodsf, tempsf, vibration_rsp, vibration_rsp_time,
 
 def twod_stat_factor_for_share(twodsf, tempsf, vibration_rsp,
                                vibration_rsp_time,
-                               twod_sf_counter, sensor_index, stat_factor_calc_info,
+                               twod_sf_counter, sensor_index, sensor_name, stat_factor_calc_info,
                                average_flag=0):
     """
     功能：基于角度域重采样的振动数据按圈计算统计学指标
@@ -1841,14 +1819,13 @@ def twod_stat_factor_for_share(twodsf, tempsf, vibration_rsp,
     2. 实时更新的按圈计算统计学指标中间结果
     """
 
-    indicatorSet = set(stat_factor_calc_info['indicatorNestedList'][sensor_index])
-    if not indicatorSet:
+    if not stat_factor_calc_info:
         # 如果指标列表为空则不进行按圈计算
         return twodsf, tempsf
-    for i, pointsNum in enumerate(stat_factor_calc_info['pointsNum']):
+    for i, pointsNum in enumerate(stat_factor_calc_info[sensor_name]['pointsNum']):
         # 依次计算各个转轴的结果
-        temp_counter = tempsf[stat_factor_calc_info['gearName'][i]]['counter']
-        temp_gear_name = stat_factor_calc_info['gearName'][i]
+        temp_counter = tempsf[tuple(stat_factor_calc_info[sensor_name][i]['value'])]['counter']
+        temp_gear_name = stat_factor_calc_info['index']
         while pointsNum * (temp_counter + 1) <= len(vibration_rsp):
             # 获取当前转轴的振动数据以及对应的时间
             # x_value = [vibration_rsp_time[pointsNum * temp_counter],
@@ -1866,41 +1843,25 @@ def twod_stat_factor_for_share(twodsf, tempsf, vibration_rsp,
             max_value = 0
             mean_value = 0
             # 根据指标列表分别进行计算
-            for j, indicator in enumerate(
-                    stat_factor_calc_info['indicatorNestedList'][sensor_index]):
-                if indicator == 'RMS':
+            indicatorNum = len(stat_factor_calc_info[sensor_name])
+            for j, indicator in enumerate(stat_factor_calc_info[sensor_name]):
+                if indicator['index'].lower()[:3] == 'rms':
                     rms_value, xi2 = twodtd_rms(vib, pointsNum)
-                    twodsf[i * stat_factor_calc_info['indicatorNum'][sensor_index] + j][
-                        'yValue'][temp_counter] = rms_value
-                    twodsf[i * stat_factor_calc_info['indicatorNum'][sensor_index] + j][
-                        'xValue'][temp_counter] = x_value
-                elif indicator == 'Crest':
+                    twodsf[i * indicatorNum + j]['yValue'][temp_counter] = rms_value
+                    twodsf[i * indicatorNum + j]['xValue'][temp_counter] = x_value
+                elif indicator['index'].lower()[:5] == 'crest':
                     crest_value, max_value, xi2 = twodtd_crest(vib, pointsNum)
-                    twodsf[i * stat_factor_calc_info['indicatorNum'][sensor_index] + j][
-                        'yValue'][temp_counter] = crest_value
-                    twodsf[i * stat_factor_calc_info['indicatorNum'][sensor_index] + j][
-                        'xValue'][temp_counter] = x_value
-                elif indicator == 'Kurtosis':
-                    kur_value, mean_value, xi4, xi3, xi2 = twodtd_kurtosis(vib,
-                                                                           pointsNum)
-                    twodsf[i * stat_factor_calc_info['indicatorNum'][sensor_index] + j][
-                        'yValue'][temp_counter] = kur_value
-                    twodsf[i * stat_factor_calc_info['indicatorNum'][sensor_index] + j][
-                        'xValue'][temp_counter] = x_value
-                elif indicator == 'Skewness':
-                    skew_value, mean_value, xi3, xi2 = twodtd_skewness(vib,
-                                                                       pointsNum)
-                    twodsf[i * stat_factor_calc_info['indicatorNum'][sensor_index] + j][
-                        'yValue'][temp_counter] = skew_value
-                    twodsf[i * stat_factor_calc_info['indicatorNum'][sensor_index] + j][
-                        'xValue'][temp_counter] = x_value
-                elif indicator == "SPL":
-                    spl_value, xi2 = twod_spl(vib, pointsNum)
-                    twodsf[i * stat_factor_calc_info['indicatorNum'][sensor_index] + j][
-                        'yValue'][temp_counter] = spl_value
-                    twodsf[i * stat_factor_calc_info['indicatorNum'][sensor_index] + j][
-                        'xValue'][temp_counter] = x_value
-                elif indicator == "SPL(A)":
+                    twodsf[i * indicatorNum + j]['yValue'][temp_counter] = crest_value
+                    twodsf[i * indicatorNum + j]['xValue'][temp_counter] = x_value
+                elif indicator['index'].lower()[:7] == 'kurtosis':
+                    kur_value, mean_value, xi4, xi3, xi2 = twodtd_kurtosis(vib, pointsNum)
+                    twodsf[i * indicatorNum + j]['yValue'][temp_counter] = kur_value
+                    twodsf[i * indicatorNum + j]['xValue'][temp_counter] = x_value
+                elif indicator['index'].lower()[:7] == 'skewness':
+                    skew_value, mean_value, xi3, xi2 = twodtd_skewness(vib, pointsNum)
+                    twodsf[i * indicatorNum + j]['yValue'][temp_counter] = skew_value
+                    twodsf[i * indicatorNum + j]['xValue'][temp_counter] = x_value
+                elif indicator['index'].lower()[:6] == "spl(a)":
                     # 生成A计权滤波器
                     B, A = A_weighting(stat_factor_calc_info['sampleRate'])
                     if pointsNum > 500:
@@ -1908,31 +1869,34 @@ def twod_stat_factor_for_share(twodsf, tempsf, vibration_rsp,
                     else:
                         a_weighting_calc_vib = lfilter(B, A, vib)
                     spl_value, xi2_A = twod_spl(a_weighting_calc_vib, pointsNum)
-                    twodsf[i * stat_factor_calc_info['indicatorNum'][sensor_index] + j][
-                        'yValue'][temp_counter] = spl_value
-                    twodsf[i * stat_factor_calc_info['indicatorNum'][sensor_index] + j][
-                        'xValue'][temp_counter] = x_value
+                    twodsf[i * indicatorNum + j]['yValue'][temp_counter] = spl_value
+                    twodsf[i * indicatorNum + j]['xValue'][temp_counter] = x_value
+                elif indicator['index'].lower()[:3] == "spl":
+                    spl_value, xi2 = twod_spl(vib, pointsNum)
+                    twodsf[i * indicatorNum + j]['yValue'][temp_counter] = spl_value
+                    twodsf[i * indicatorNum + j]['xValue'][temp_counter] = x_value
                 else:
-                    qDAQ_logger.info(
-                        "error, no this indicator calculation for now, please check the indicator name!")
+                    qDAQ_logger.info("error, no this indicator calculation for now, please check the indicator name!")
             if not average_flag:
                 # 记录统计学指标所需要的的中间值
-                if {'RMS', 'Crest', 'Kurtosis', 'Skewness', 'SPL'} & indicatorSet:
+                if temp_gear_name.lower()[:3] in ('rms', 'spl') or temp_gear_name.lower()[
+                                                                   :5] == 'crest' or temp_gear_name.lower()[:7] in (
+                        'kurtosis', 'skewness'):
                     tempsf[temp_gear_name]['xi2'][temp_counter] = xi2
-                if {'Crest'} & indicatorSet:
+                if temp_gear_name.lower()[:5] == 'crest':
                     tempsf[temp_gear_name]['xmax'][temp_counter] = max_value
-                if {'Kurtosis', 'Skewness'} & indicatorSet:
+                if temp_gear_name.lower()[:7] in ('kurtosis', 'skewness'):
                     tempsf[temp_gear_name]['xi3'][temp_counter] = xi3
                     tempsf[temp_gear_name]['xmean'][temp_counter] = mean_value
-                if {'Kurtosis'} & indicatorSet:
+                if temp_gear_name.lower()[:7] == 'kurtosis':
                     tempsf[temp_gear_name]['xi4'][temp_counter] = xi4
-                if {'SPL(A)'} & indicatorSet:
+                if temp_gear_name.lower()[:6] == 'spl(a)':
                     # 确认需要记录A计权平方和值xi2_A，而且需要避免重复记录
                     tempsf[temp_gear_name]['xi2_A'][temp_counter] = xi2_A
             temp_counter += 1
             tempsf[temp_gear_name]['counter'] += 1
             twod_sf_counter[temp_gear_name] = temp_counter
-    return twodsf, tempsf
+        return twodsf, tempsf
 
 
 def twod_stat_factor_for_const(twodsf, tempsf, vibration_rsp,
@@ -2087,7 +2051,7 @@ def twod_stat_factor_for_const_fluctuation(twodsf, tempsf, rev, rev_index, vibra
             # qDAQ_logger.debug("rev[temp_last_rev_index+temp_vib_right_index]:{}".format(rev[temp_last_rev_index+temp_vib_right_index]))
             # qDAQ_logger.debug("rev[temp_last_rev_index+temp_vib_right_index]:{}".format(temp_last_rev_index+temp_vib_right_index))
             x_value = (vib_start_index + (
-                        temp_last_rev_index + temp_last_rev_index + temp_vib_right_index) / 2) / sampleRate
+                    temp_last_rev_index + temp_last_rev_index + temp_vib_right_index) / 2) / sampleRate
             # qDAQ_logger.debug("x_value:{}".format(x_value))
             # 计算相关指标(基于指标列表）
             # 初始化临时值
@@ -2246,7 +2210,7 @@ def oned_stat_factor(tempsf, stat_factor_calc_info, sensor_index):
     return onedsf_result
 
 
-def oned_stat_factor_mean(tempsf, twodsf, stat_factor_calc_info, sensor_index):
+def oned_stat_factor_mean(tempsf, twodsf, stat_factor_calc_info, sensor_index, sensor_name):
     """
     功能：基于二维按圈计算的统计学指标计算一维的指标值
     输入：
@@ -2257,44 +2221,40 @@ def oned_stat_factor_mean(tempsf, twodsf, stat_factor_calc_info, sensor_index):
     返回：一维按圈计算统计学指标结果列表
     """
     onedsf_result = list()
-    for i, gearName in enumerate(stat_factor_calc_info['gearName']):
-        for j, indicator in enumerate(stat_factor_calc_info['indicatorNestedList'][sensor_index]):
-            # rms，spl,spl(A)按能量求平均
-            if indicator == 'RMS':
-                onedsf_result.append({
-                    'name': '-'.join([gearName, indicator]),
-                    'unit':
-                        stat_factor_calc_info['indicatorUnit'][sensor_index][i],
-                    'value': oned_rms(tempsf[gearName],
-                                      stat_factor_calc_info['pointsNum'][i]),
-                    "indicatorDiagnostic": -1
-                })
-            elif indicator == 'SPL':
-                onedsf_result.append({
-                    'name': '-'.join([gearName, indicator]),
-                    'unit': 'dB',
-                    'value': oned_spl(tempsf[gearName],
-                                      stat_factor_calc_info['pointsNum'][i]),
-                    "indicatorDiagnostic": -1
-                })
-            elif indicator == 'SPL(A)':
-                onedsf_result.append({
-                    'name': '-'.join([gearName, indicator]),
-                    'unit': 'dB(A)',
-                    'value': oned_a_spl(tempsf[gearName],
-                                        stat_factor_calc_info['pointsNum'][i]),
-                    "indicatorDiagnostic": -1
-                })
-            elif indicator in ["Crest", "Kurtosis", "skewness"]:
-                pass
-            else:
-                qDAQ_logger.info(
-                    "error, no this indicator calculation for now, please check the indicator name first")
+    for i, indicator in enumerate(stat_factor_calc_info[sensor_name]):
+        # rms，spl,spl(A)按能量求平均
+        if indicator['index'].lower()[:3] == 'rms':
+            onedsf_result.append({
+                'name': indicator['index'],
+                'unit': indicator['unit'][0] if len(indicator['unit']) == 1 else indicator['unit'][sensor_index],
+                'value': oned_rms(tempsf[indicator['index']],
+                                  stat_factor_calc_info['pointsNum'][i]),
+                "indicatorDiagnostic": -1
+            })
+        elif indicator['index'].lower()[:3] == 'spl':
+            onedsf_result.append({
+                'name': indicator['index'],
+                'unit': 'dB',
+                'value': oned_spl(tempsf[indicator['index']], indicator['pointsNum']),
+                "indicatorDiagnostic": -1
+            })
+        elif indicator['index'].lower()[:6] == 'spl(a)':
+            onedsf_result.append({
+                'name': indicator['index'],
+                'unit': 'dB(A)',
+                'value': oned_a_spl(tempsf[indicator['index']], indicator['pointsNum']),
+                "indicatorDiagnostic": -1
+            })
+        elif indicator['index'].lower()[:7] in ("kurtosis", "skewness") or indicator['index'].lower()[:5] == 'crest':
+            pass
+        else:
+            qDAQ_logger.info(
+                "error, no this indicator calculation for now, please check the indicator name first")
     for i, data in enumerate(twodsf):
         # Crest，Kurtosis, skewness求简单平均
         # 确认是否进行db转换
         temp_indicator = data["yName"].split("-")[-1]
-        if temp_indicator in ["Crest", "Kurtosis", "skewness"]:
+        if temp_indicator.lower()[:7] in ("Kurtosis", "skewness") or temp_indicator.lower()[:5] == 'crest':
 
             if data['yUnit'] == 'dB':
 
@@ -2349,7 +2309,7 @@ def oned_stat_factor_mean_for_const(tempsf, twodsf, stat_factor_calc_info, senso
                     'unit': 'dB',
                     'value': 20 * np.log10(
                         np.sqrt(np.sum(tempsf[gearName]["xi2"]) / tempsf[gearName]["lastRevIndex"]) / (
-                                    2 * 10 ** -5)),
+                                2 * 10 ** -5)),
                     "indicatorDiagnostic": -1
                 })
             elif indicator == 'SPL(A)':

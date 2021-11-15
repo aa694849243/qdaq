@@ -143,52 +143,7 @@ def rpm_calc(present_trigger_location, overall_trigger, fs, speed_calc_info):
     return speed_loc, speed_value
 
 
-def rpm_calc_for_share(trigger_array, start, end, sampleRate, average, step, rpmFactor, rpml_array,
-                       rpm_array,
-                       rpm_index):
-    """
-
-    Args:
-        trigger_array: 上升沿/下降沿位置
-        start: 该帧计算出了第7，8，9，10，11，12（从0计数）个trigger,start必定小于7，可以为6，可以为5，
-        因为上一帧计算到的最后的trigger不确定，特例是start为0
-        end: 该帧计算出了第7，8，9，10，11，12（从0计数）个trigger,则end传递进来的是12
-        sampleRate: 采样率
-        speed_calc_info: 转速计算信息
-        rpml_array: 整个测试的转速曲线数组 时间
-        rpm_array: 整个测试的转速曲线数组  转速值
-        rpm_index: 下一个rpm点要写入的索引
-
-    Returns:
-
-    """
-
-    if start == 0:
-        # 第一次算
-        if end < average:
-            # 算不出来
-            return start, rpm_index
-        else:
-            # 能算出值
-            start = average - step
-
-    # 本次计算能计算出来多少个
-    len = (end - start) // step
-    for i in range(len):
-        # 中间是speed_calc_info["averageNum"]个间隔
-        delta_t = (trigger_array[start + step] - trigger_array[start + step - average]) / sampleRate
-        rpm_array[rpm_index] = rpmFactor / delta_t
-        # 取中间时刻作为speed_time
-        # rpml_array[rpm_index]=(trigger_array[start+step]+
-        #          trigger_array[start+step-average])/2/sampleRate
-        # 取averager最后一个上升沿为时刻点,将来乘以采样率得到的值取int即为上升沿/下降沿的位置
-        rpml_array[rpm_index] = (trigger_array[start + step]) / sampleRate
-        rpm_index += 1
-        start = start + step
-    return start, rpm_index
-
-
-def rpm_calc_for_share_for_byd(trigger_array, start, end, sampleRate, average, step, rpmFactor,
+def rpm_calc_for_share(trigger_array, start, end, sampleRate, average, step, rpmFactor,
                                rpml_array, rpm_array,
                                rpm_index, is_first_calc):
     """

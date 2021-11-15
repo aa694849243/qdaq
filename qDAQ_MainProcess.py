@@ -29,7 +29,7 @@ from queue import Queue
 from parameters import Parameters
 from common_info import config_folder, config_file, speed_signal, sensor_count, max_size, read_type, \
     flag_index_dict, qDAQ_logger, hardware_confirm_flag, cpu_serial, \
-    ni_device, version, board,test_bench_ip
+    ni_device, version, board, test_bench_ip
 from initial import confirm_target_folder, create_empty_final_result, time_get
 from utils import create_properities, file_namer
 from nvh_calculate import nvh_process
@@ -53,7 +53,7 @@ simu_start_flag = False
 simu_end_flag = True
 
 # 前端是否发送了结束simu的请求
-simu_end_request=False
+simu_end_request = False
 
 # start时要向其它进程的put内容，stop时要从其它进程get内容，若参数配置等异常出现，还未向其它进程的put内容
 # stop就会没有办法get到数据，会无法stop,若已向其它进程put内容，则将改flag置为True
@@ -73,7 +73,6 @@ calibrate_end_flag = True  # 初始状态为Ture表示处于停止状态，False
 # define a server to receive the request of test bench
 app = Flask(__name__)
 CORS(app, supports_credentials=True)  # make server can be accessed from other PC
-
 
 result_dict = dict()
 result_dict[-1] = "界限值缺失"
@@ -100,14 +99,15 @@ def get_version():
 def test():
     return render_template('templates.html')
 
+
 # 定义结果返回接口(总状态)
 @app.route('/AQS2RTRemoteControl/overallResult')
 def overallResult():
-    global result_dict,gv_dict_status
-    resp = Response(response="{}".format(result_dict[int(gv_dict_status.get("result"))] if gv_dict_status.get("result") else None),
-                    mimetype='text/plain')
+    global result_dict, gv_dict_status
+    resp = Response(
+        response="{}".format(result_dict[int(gv_dict_status.get("result"))] if gv_dict_status.get("result") else None),
+        mimetype='text/plain')
     return resp
-
 
 
 @app.route('/miccalibrate/start', methods=['GET', 'POST'])  # 开启mic校正命令
@@ -209,7 +209,7 @@ def acquire_sensitivity():
     try:
         resp = Response(response=json.dumps(
             {"code": 200, "msg": "success", "data": json.dumps({'sensitivity': -1, 'rawData': None})}),
-                        mimetype='application/json')
+            mimetype='application/json')
         gv_dict_status_temp['sensitivity'] = gv_dict_status['sensitivity']
         if gv_dict_status_temp['sensitivity']['sensitivity']:
             # 存在数据
@@ -227,23 +227,23 @@ def acquire_sensitivity():
     except Exception:
         resp = Response(response=json.dumps(
             {"code": 3000, "msg": "get sensitivity failed", "data": None}),
-                        mimetype='application/json')
+            mimetype='application/json')
         return resp
 
 
-@app.route("/checkSwitchable",methods=["GET"])
+@app.route("/checkSwitchable", methods=["GET"])
 def checkSwitchable():
     # 处于simu大任务中
     if simu_start_flag:
-        resp=Response(response=json.dumps({"code": 200, "msg": "sucess", "data": "simu"}))
+        resp = Response(response=json.dumps({"code": 200, "msg": "sucess", "data": "simu"}))
         return resp
     # 没有处于simu大任务中，但是在运行，说明处于实采模式
     if not simu_start_flag and start_command_flag:
-        resp=Response(response=json.dumps({"code": 200, "msg": "sucess", "data": "rt"}))
+        resp = Response(response=json.dumps({"code": 200, "msg": "sucess", "data": "rt"}))
         return resp
     else:
         # 没有处于simu大任务中，也没有在运行，说明是在待机
-        resp=Response(response=json.dumps({"code": 200, "msg": "sucess", "data": "switchable"}))
+        resp = Response(response=json.dumps({"code": 200, "msg": "sucess", "data": "switchable"}))
         return resp
 
 
@@ -293,7 +293,7 @@ def init():
 
 @app.route('/frontEndControl/Start', methods=['POST'])
 def frontEndControlStart():
-    global simu_queue, simu_start_flag, simu_end_flag,simu_end_request
+    global simu_queue, simu_start_flag, simu_end_flag, simu_end_request
     if simu_start_flag:
         # 前端重复发送了simu指令
         resp = Response(response=json.dumps({"code": 3000, "msg": "simu指令重复发送", "data": None}),
@@ -305,7 +305,7 @@ def frontEndControlStart():
                         mimetype='application/json')
         return resp
     try:
-        request_d=json.loads(request.data)
+        request_d = json.loads(request.data)
         type_from_front = request_d["type"]
         serial_no_list = request_d["serialNoList"]
         simu_count = int(request_d["simu_count"])
@@ -325,23 +325,25 @@ def frontEndControlStart():
     })
     simu_start_flag = True
     simu_end_flag = False
-    simu_end_request=False
+    simu_end_request = False
     resp = Response(response=json.dumps({"code": 200, "msg": "已经成功将simu任务加进任务队列!", "data": None}),
                     mimetype='application/json')
     return resp
 
+
 @app.route('/frontEndControl/Stop', methods=['POST'])
 def frontEndControlStop():
-    global simu_queue, simu_start_flag, simu_end_flag,simu_end_request
+    global simu_queue, simu_start_flag, simu_end_flag, simu_end_request
     if simu_end_flag:
         # 前端重复发送了simu指令
         resp = Response(json.dumps({"code": 3000, "msg": "重复发送了结束指令", "data": None}))
         return resp
-    simu_end_request=True
+    simu_end_request = True
     resp = Response(json.dumps({"code": 200, "msg": "结束指令发送成功", "data": None}))
     return resp
 
-@app.route("/testBench",methods=["GET"])
+
+@app.route("/testBench", methods=["GET"])
 def testBench():
     global test_bench_ip
     with open(os.devnull, "wb") as limbo:
@@ -353,7 +355,8 @@ def testBench():
         else:
             return Response(response=json.dumps({"code": 200, "msg": 'active', "data": 'active'}))
 
-@app.route("/resetCount",methods=["POST"])
+
+@app.route("/resetCount", methods=["POST"])
 def resetCount():
     global Q_dict
     if simu_start_flag or start_command_flag or calibrate_start_flag:
@@ -365,7 +368,7 @@ def resetCount():
 
 # 前端发送simu指令的queue
 def start_stop_command():
-    global simu_queue, simu_start_flag, simu_end_flag,simu_end_request,gv_dict_status
+    global simu_queue, simu_start_flag, simu_end_flag, simu_end_request, gv_dict_status
     while True:
         try:
             data = simu_queue.get()
@@ -375,19 +378,18 @@ def start_stop_command():
         serial_no_list = data["serial_no_list"]
         type_from_front = data["type_from_front"]
         qDAQ_logger.info(simu_count)
-        simu_all_times=simu_count*len(serial_no_list)
-        simu_time=1
-
+        simu_all_times = simu_count * len(serial_no_list)
+        simu_time = 1
 
         for i in range(simu_count):
             for serial_no_from_front in serial_no_list:
                 # 前端发送了结束本次simu任务的请求，结束本次simu
-                if  simu_end_request:
+                if simu_end_request:
                     break
 
                 url_start = "http://" + "localhost" + ":" + "8002" + \
                             "/AQS2RTRemoteControl/Command?Cmd=1&Prop=1&PropNames=Type;SerialNo&PropValues=" \
-                            + type_from_front + ";" + serial_no_from_front+"&mode=simu"
+                            + type_from_front + ";" + serial_no_from_front + "&mode=simu"
                 headers = {'Content-Type': 'application/json;charset=UTF-8'}
                 qDAQ_logger.info("发送开始指令")
                 while start_command_flag:
@@ -415,14 +417,14 @@ def start_stop_command():
                         qDAQ_logger.info("将要发送结束指令")
                         r_end_command = requests.get(url_stop, headers=headers)
                         break
-                simu_time+=1
+                simu_time += 1
                 # todo：前端显示simu到第几个了
         while not simu_end_request:
             time.sleep(1)
         simu_start_flag = False
         simu_end_flag = True
         qDAQ_logger.info("type:{},serial_no_list:{} simu_count:{} simu任务已经完成".format(type_from_front
-                                                                          ,serial_no_list,simu_count))
+                                                                                     , serial_no_list, simu_count))
 
 
 # 定义台架接口（类red-ant)
@@ -445,7 +447,7 @@ def qdaq():
 
     # cmd = 1 means initial the test, cmd = 4 means terminate the test
     if cmd == '1':
-        is_simu_mode = True if request.args.get("mode") and request.args.get("mode").lower()=="simu"  else False
+        is_simu_mode = True if request.args.get("mode") and request.args.get("mode").lower() == "simu" else False
         if not is_simu_mode and simu_start_flag:
             # 这种情况是在simu前端的任务时，台架发送了实采的请求
             resp = Response("Error=0\nState=2\nXInfo=simu start again")
@@ -499,14 +501,15 @@ def qdaq():
             gv_dict_status["result"] = None
             gv_dict_status['msg'] = ""
             gv_dict_status["sectionResult"] = {"testName": list(), "limitComResult": list(), "mlResult": list()}
-            gv_dict_status["allCount"]=None
-            gv_dict_status["abnormalCount"]=None
-            gv_dict_status["unqualifiedCount"]=None
+            gv_dict_status["allCount"] = None
+            gv_dict_status["abnormalCount"] = None
+            gv_dict_status["unqualifiedCount"] = None
 
             gv_dict_status['data'] = {"type": request_content[0], "serialNo": request_content[1],
                                       "testName": list(), "startX": list(), "startY": list(),
                                       "endX": list(), "endY": list(), "x": 0.0, "y": 0.0,
-                                      "testResult": None, "reportPath": None,"testStartTime":start_timestamp.timestamp()}
+                                      "testResult": None, "reportPath": None,
+                                      "testStartTime": start_timestamp.timestamp()}
             gv_dict_status['xml'] = list()
             gv_dict_status['sensitivity'] = {'sensitivity': list(), 'rawData': list()}
             # create flag dict to control the thread
@@ -570,8 +573,10 @@ def qdaq():
                                                     param.speedRecogInfo,
                                                     param.limitCompareFlag['overLimit'])
             # set raw data save properties(raw data and colormap)
-            colormap_save_properties = create_properities(start_timestamp, param.orderSpectrumCalcInfo[
-                'orderResolution'], len(param.orderSpectrumCalcInfo['order']))
+            colormap_save_properties = []
+            for i in range(param.speedRecogInfo['test_count_except_dummy']):
+                colormap_save_properties.append(create_properities(start_timestamp, param.orderSpectrumCalcInfo[i][
+                    'orderResolution'], len(param.orderSpectrumCalcInfo[i]['order'])))
             qDAQ_logger.info("initial values already confirmed!")
         except Exception:
             gv_dict_status["code"] = 3000
@@ -585,20 +590,21 @@ def qdaq():
             # no error of initial
             # 传递参数参数到相应的进程
             # 1. 传递参数到原始数据和转速计算识别进程
+            print('speed开始')
             Q_dict['Q_speed_in'].put(
                 {"param": param, "gv_dict_status": gv_dict_status, "file_info": file_info,
                  "start_timestamp": start_timestamp, "time_click_start": time_click_start,
-                 "is_simu_mode":is_simu_mode, "sensitivity_flag": 0})
+                 "is_simu_mode": is_simu_mode, "sensitivity_flag": 0})
             # 2. 传递参数到结果数据封装进程
             Q_dict['Q_datapack_in'].put(
                 {"gv_dict_status": gv_dict_status, "param": param, "test_result": test_result,
-                 "time_click_start": time_click_start,"is_simu_mode":is_simu_mode})
+                 "time_click_start": time_click_start, "is_simu_mode": is_simu_mode})
             # 传递数据到nvh分析进程（分别给指定传感器传输）
             for i in range(sensor_count):
                 Q_dict["Q_nvh_in_" + str(i)].put(
                     {"gv_dict_status": gv_dict_status, "param": param, "test_result": test_result,
                      "sensor_index": i, "time_click_start": time_click_start, "file_info": file_info,
-                     "colormap_save_properties": colormap_save_properties,"is_simu_mode":is_simu_mode})
+                     "colormap_save_properties": colormap_save_properties, "is_simu_mode": is_simu_mode})
             queue_put_flag = True
 
             # 启动定时任务
@@ -681,9 +687,9 @@ def qdaq():
             gv_dict_status['code'] = 0
             gv_dict_status["result"] = None
             gv_dict_status["sectionResult"] = {"testName": list(), "limitComResult": list(), "mlResult": list()}
-            gv_dict_status["allCount"]=None
-            gv_dict_status["abnormalCount"]=None
-            gv_dict_status["unqualifiedCount"]=None
+            gv_dict_status["allCount"] = None
+            gv_dict_status["abnormalCount"] = None
+            gv_dict_status["unqualifiedCount"] = None
             gv_dict_status['msg'] = ""
             gv_dict_status['xml'] = list()
             gv_dict_status['data'] = {"type": "", "serialNo": "", "testName": list(), "startX": list(),
@@ -808,7 +814,7 @@ if __name__ == '__main__':
     # 主函数，程序执行的入口
     qDAQ_logger.debug("main start")
     multiprocessing.freeze_support()  # 保护主进程
-    global gv_dict_status, timer_queue, simu_queue,calibrate_timer_queue
+    global gv_dict_status, timer_queue, simu_queue, calibrate_timer_queue
     # global Q_dict
     try:
         # 信息校验
@@ -818,12 +824,6 @@ if __name__ == '__main__':
             if cpu_serial not in get_cpu_id():
                 print("cpu info not matched, SN should be：{}".format(cpu_serial))
                 raise Exception("cpu错误")
-        # 转速信号校验，可以是ttl（脉冲信号），resolver（单路旋变），resolver2（双路旋变），都不是则报错
-        if speed_signal != "ttl" and speed_signal != "resolver" and speed_signal != "resolver2":
-            qDAQ_logger.error("speed_signal设置不合理")
-            raise Exception(
-                "speed_signal:{}设置不合理，应为\"ttl\"或\"resolver\"或\"resolver2\"".format(speed_signal))
-
         # 传感器个数校验，至少1个传感器
         if sensor_count <= 0:
             raise Exception("sensor_count:{} 设置不合理".format(sensor_count))
@@ -836,27 +836,19 @@ if __name__ == '__main__':
         input()
         sys.exit()
 
-    if version == 1:
-        # 普通qdaq
+    if version == 1 or version == 2:
+        # 普通qdaq和byd版qdaq
         try:
             # 假设采样率为102400，测试段时长600s
             size = max_size * 4
-            # 创建共享内存
-            # speed在ttl信号中存放speed通道，在旋变信号中存放sin通道，在speed进程中的speedChannel记为Speed/Sin
-            shm_speed = shared_memory.SharedMemory(name="shm_speed", create=True, size=size)
-            # 双路旋变，还要开启cos
-            if speed_signal == "resolver2":
-                shm_cos = shared_memory.SharedMemory(name="shm_cos", create=True, size=size)
             # 几个传感器，则开辟几个传感器的内存
             # 至少存在一个传感器，开辟vib0
             shm_vib_list = list()
             for i in range(sensor_count):
-                shm_vib_list.append(
-                    shared_memory.SharedMemory(name="shm_vib" + str(i), create=True, size=size))
+                shm_vib_list.append(shared_memory.SharedMemory(name="shm_vib" + str(i), create=True, size=size))
             # trigger的位置,理论上每两个上升沿/下降沿所在的位置至少相差2，否则是无法识别trigger的 例：1 -1 1 -1
             # TODO:校验旋变信号下trigger与原始数据点数之间的关系
-            shm_trigger = shared_memory.SharedMemory(name='shm_trigger', create=True,
-                                                     size=int(size / 2 + 4))
+            shm_trigger = shared_memory.SharedMemory(name='shm_trigger', create=True, size=int(size / 2 + 4))
             # 保存转速曲线，转速曲线的位置有trigger位置决定，最多每一个trigger处对应一个转速
             shm_rpml = shared_memory.SharedMemory(name='shm_rpml', create=True, size=int(size / 2 + 4))
             shm_rpm = shared_memory.SharedMemory(name='shm_rpm', create=True, size=int(size / 2 + 4))
@@ -864,75 +856,21 @@ if __name__ == '__main__':
             shm_flag = shared_memory.SharedMemory(name="shm_flag", create=True, size=4096)
             gv_dict_flag = shm_flag.buf
         except FileExistsError:
-            # speed在ttl信号中存放speed通道，在旋变信号中存放sin通道，在speed进程中的speedChannel记为Speed/Sin
-            shm_speed = shared_memory.SharedMemory(name="shm_speed")
-            # 双路旋变，还要开启cos
-            if speed_signal == "resolver2":
-                shm_cos = shared_memory.SharedMemory(name="shm_cos")
-            # 几个传感器，则开辟几个传感器的内存
-            # 至少存在一个传感器，开辟vib0
-            shm_vib_list = list()
-            for i in range(sensor_count):
-                shm_vib_list.append(shared_memory.SharedMemory(name="shm_vib" + str(i)))
-            # 保存转速曲线
-            shm_rpml = shared_memory.SharedMemory(name='shm_rpml')
-            shm_rpm = shared_memory.SharedMemory(name='shm_rpm')
-            # trigger的位置
-            shm_trigger = shared_memory.SharedMemory(name='shm_trigger')
-            # shared_memory_dict运行的时间长的话就会出错，该flag仅有True，false之分，可以放在共享内存中用0表示false，用1表示True
-            shm_flag = shared_memory.SharedMemory(name="shm_flag")
-            gv_dict_flag = shm_flag.buf
-    elif version == 2:
-        # BYD专版qdaq
-        try:
             # 假设采样率为102400，测试段时长600s
             size = max_size * 4
-            # 创建共享内存
-            # speed在ttl信号中存放speed通道，在旋变信号中存放sin通道，在speed进程中的speedChannel记为Speed/Sin
-            shm_ttl = shared_memory.SharedMemory(name="shm_ttl", create=True, size=size)
-            # BYD
-            # 直接开两路信号
-            # 开启Sin通道
-            shm_sin = shared_memory.SharedMemory(name="shm_sin", create=True, size=size)
-            # 双路旋变，还要开启cos
-            if speed_signal == "resolver2":
-                shm_cos = shared_memory.SharedMemory(name="shm_cos", create=True, size=size)
             # 几个传感器，则开辟几个传感器的内存
             # 至少存在一个传感器，开辟vib0
             shm_vib_list = list()
             for i in range(sensor_count):
-                shm_vib_list.append(
-                    shared_memory.SharedMemory(name="shm_vib" + str(i), create=True, size=size))
+                shm_vib_list.append(shared_memory.SharedMemory(name="shm_vib" + str(i), create=True, size=size))
             # trigger的位置,理论上每两个上升沿/下降沿所在的位置至少相差2，否则是无法识别trigger的 例：1 -1 1 -1
             # TODO:校验旋变信号下trigger与原始数据点数之间的关系
-            shm_trigger = shared_memory.SharedMemory(name='shm_trigger', create=True,
-                                                     size=int(size / 2 + 4))
+            shm_trigger = shared_memory.SharedMemory(name='shm_trigger', create=True, size=int(size / 2 + 4))
             # 保存转速曲线，转速曲线的位置有trigger位置决定，最多每一个trigger处对应一个转速
             shm_rpml = shared_memory.SharedMemory(name='shm_rpml', create=True, size=int(size / 2 + 4))
             shm_rpm = shared_memory.SharedMemory(name='shm_rpm', create=True, size=int(size / 2 + 4))
             # 在连接内存的时候，不管开的时候有多大，最小连接单位为4096字节
             shm_flag = shared_memory.SharedMemory(name="shm_flag", create=True, size=4096)
-            gv_dict_flag = shm_flag.buf
-        except FileExistsError:
-            # speed在ttl信号中存放speed通道，在旋变信号中存放sin通道，在speed进程中的speedChannel记为Speed/Sin
-            shm_ttl = shared_memory.SharedMemory(name="shm_ttl")
-
-            shm_sin = shared_memory.SharedMemory(name="shm_sin")
-            # 双路旋变，还要开启cos
-            if speed_signal == "resolver2":
-                shm_cos = shared_memory.SharedMemory(name="shm_cos")
-            # 几个传感器，则开辟几个传感器的内存
-            # 至少存在一个传感器，开辟vib0
-            shm_vib_list = list()
-            for i in range(sensor_count):
-                shm_vib_list.append(shared_memory.SharedMemory(name="shm_vib" + str(i)))
-            # 保存转速曲线
-            shm_rpml = shared_memory.SharedMemory(name='shm_rpml')
-            shm_rpm = shared_memory.SharedMemory(name='shm_rpm')
-            # trigger的位置
-            shm_trigger = shared_memory.SharedMemory(name='shm_trigger')
-            # shared_memory_dict运行的时间长的话就会出错，该flag仅有True，false之分，可以放在共享内存中用0表示false，用1表示True
-            shm_flag = shared_memory.SharedMemory(name="shm_flag")
             gv_dict_flag = shm_flag.buf
     elif version == 3 or version == 4:
         # 恒速电机
@@ -945,14 +883,11 @@ if __name__ == '__main__':
             # 至少存在一个传感器，开辟vib0
             shm_vib_list = list()
             for i in range(sensor_count):
-                shm_vib_list.append(
-                    shared_memory.SharedMemory(name="shm_vib" + str(i), create=True, size=size))
-
+                shm_vib_list.append(shared_memory.SharedMemory(name="shm_vib" + str(i), create=True, size=size))
             # 在连接内存的时候，不管开的时候有多大，最小连接单位为4096字节
             shm_flag = shared_memory.SharedMemory(name="shm_flag", create=True, size=4096)
             gv_dict_flag = shm_flag.buf
         except FileExistsError:
-
             # 几个传感器，则开辟几个传感器的内存
             # 至少存在一个传感器，开辟vib0
             shm_vib_list = list()
@@ -978,9 +913,7 @@ if __name__ == '__main__':
         # 设置自动回收垃圾
         gc.enable()
         gc.set_threshold(1, 1, 1)
-
         qDAQ_logger.info("server will start soon")
-
         lock_for_tdms = Process_Lock()
         # 设置主进程与其他进程通信的队列
         Q_dict = dict()
@@ -1026,7 +959,7 @@ if __name__ == '__main__':
 
     try:
         simu_queue = Queue(1)
-        front_end_simu_thread = Thread(target=start_stop_command,args=())
+        front_end_simu_thread = Thread(target=start_stop_command, args=())
         front_end_simu_thread.start()
     except Exception:
         qDAQ_logger.error("前端simu线程出现错误")
