@@ -12,7 +12,8 @@ import traceback
 import global_var as gv
 import pyaudio
 from common_info import flag_index_dict, speed_signal, max_size, sensor_count, ni_device, \
-    save_type, read_type, qDAQ_logger, sleep_ratio, board, Umic_names, Umic_hostapis, version, sys_name, bit_depth
+    save_type, read_type, qDAQ_logger, sleep_ratio, board, Umic_names, Umic_hostapis, version, sys_name, bit_depth, \
+    preRecogIndex
 from speed_tools import speed_detect_start, speed_detect_end, resolver, trigger_detect_for_share, \
     rpm_calc_for_share, resolver_single_signal_for_share, ramp_quality, speed_calibration, \
     single_resolver_butter_filter, speed_calibration_with_orderlist
@@ -59,7 +60,6 @@ def speed_process(Q_speed_in, Q_speed_out, Q_speed_nvh_list):
         shm_speed, shm_ttl, shm_sin
     global target_device, target_ai_device, target_ai_info, target_input_mode, target_mode_channels, ftp_queue
     global running_mode
-    print("当前进程：", os.getpid(), " 父进程：", os.getppid())
     try:
         if version == 1 or version == 2:
             shm_flag = shared_memory.SharedMemory(name="shm_flag")
@@ -274,6 +274,7 @@ def rawdataConsumer_for_qdaq(Q_speed_nvh_list, param, gv_dict_status,
         shm_sin, shm_ttl
     global target_device, target_ai_device, target_ai_info, target_input_mode, target_mode_channels, ftp_queue
     global running_mode
+    global preRecogIndex
     # 设置自动垃圾回收
     # gc.enable()
     # gc.set_threshold(1, 1, 1)
@@ -326,12 +327,13 @@ def rawdataConsumer_for_qdaq(Q_speed_nvh_list, param, gv_dict_status,
     # triggerLevel_for_resolver2 = param.speedCalcInfo["triggerLevelForBydResolver"]
 
     # 各测试段的参数做成列表
-    pprs = list(pluck('ppr', param.speedCalcInfo))
-    speedSignals = list(pluck('speedSignal', param.speedCalcInfo))
-    overlaps = list(pluck('overlap', param.speedCalcInfo))
-    averageNums = list(pluck('averageNum', param.speedCalcInfo))
-    speedRatios = list(pluck('speedRatio', param.speedCalcInfo))
-    speedChannels = list(pluck('channelName', param.speedCalcInfo))
+    pprs = [*pluck('ppr', param.speedCalcInfo)]
+    speedSignals = [*pluck('speedSignal', param.speedCalcInfo)]
+    overlaps = [*pluck('overlap', param.speedCalcInfo)]
+    averageNums = [*pluck('averageNum', param.speedCalcInfo)]
+    speedRatios = [*pluck('speedRatio', param.speedCalcInfo)]
+    speedChannels = [*pluck('channelName', param.speedCalcInfo)]
+    triggerLevels = [*pluck('triggerLevel', param.speedCalcInfo)]
     # 参数配置中的speed_signal决定是否开启Cos通道，即isResolver2变量，这里更新speed_signal
     # 在切换的测试段识别结束后再次切换
     # speed_signal = param.speedCalcInfo["signalBeforeSwitch"]
@@ -479,25 +481,29 @@ def rawdataConsumer_for_qdaq(Q_speed_nvh_list, param, gv_dict_status,
                     last_angle_l2f, loc_l2f = 0, None
                     left_index = 0
                 try:
-                    if speedSignals[recog_index] == "ttl":
+                    recog_index_signal = recog_index if recog_index < len(speedSignals) else recog_index - 1
+                    if speedSignals[recog_index_signal] == "ttl":
                         # 该方法返回的location即为从检测开始时记的索引
-                        temptl = trigger_detect_for_share(gv_dict_rawdata[speedChannels[recog_index][0]],
+                        temptl = trigger_detect_for_share(gv_dict_rawdata[speedChannels[recog_index_signal][0]],
                                                           index_rawdata_backup,
-                                                          index_rawdata, param.speedCalcInfo[recog_index])
+                                                          index_rawdata, param.speedCalcInfo[recog_index_signal])
                         # 保存trigger信息到共享内存
                         trigger_array[index_trigger:index_trigger + len(temptl)] = temptl + index_rawdata_backup
                         index_trigger += len(temptl)
-                    elif speedSignals[recog_index] == "resolver":
+                    elif speedSignals[recog_index_signal] == "resolver":
                         index_trigger, left_index = single_resolver_butter_filter(
-                            gv_dict_rawdata[speedChannels[recog_index][0]], left_index, index_rawdata, sampleRate,
-                            param.speedCalcInfo[recog_index]["coils"], trigger_array, index_trigger, pprs[recog_index])
-                    elif speedSignals[recog_index] == "resolver2":
+                            gv_dict_rawdata[speedChannels[recog_index_signal][0]], left_index, index_rawdata,
+                            sampleRate,
+                            param.speedCalcInfo[recog_index_signal]["coils"], trigger_array, index_trigger,
+                            pprs[recog_index_signal])
+                    elif speedSignals[recog_index_signal] == "resolver2":
+                        print(f'{triggerLevels=}')
                         temptl, last_angle_l1f, loc_l1f, last_angle_l2f, loc_l2f, counter_angle = resolver(
-                            gv_dict_rawdata[speedChannels[recog_index][0]][index_rawdata_backup:index_rawdata],
-                            gv_dict_rawdata[speedChannels[recog_index][1]][index_rawdata_backup:index_rawdata],
-                            pprs[recog_index],
-                            param.speedCalcInfo[recog_index]['coils'],
-                            pprs[recog_index],
+                            gv_dict_rawdata[speedChannels[recog_index_signal][0]][index_rawdata_backup:index_rawdata],
+                            gv_dict_rawdata[speedChannels[recog_index_signal][1]][index_rawdata_backup:index_rawdata],
+                            triggerLevels[recog_index_signal],
+                            param.speedCalcInfo[recog_index_signal]['coils'],
+                            pprs[recog_index_signal],
                             last_angle_l1f,
                             loc_l1f,
                             last_angle_l2f,
@@ -514,9 +520,9 @@ def rawdataConsumer_for_qdaq(Q_speed_nvh_list, param, gv_dict_status,
                         last_rpm_cal_index,
                         index_trigger - 1,
                         sampleRate,
-                        averageNums[recog_index],
-                        averageNums[recog_index] - overlaps[recog_index],
-                        60 * averageNums[recog_index] / pprs[recog_index],
+                        averageNums[recog_index_signal],
+                        averageNums[recog_index_signal] - overlaps[recog_index_signal],
+                        60 * averageNums[recog_index_signal] / pprs[recog_index_signal],
                         rpml_array,
                         rpm_array, rpm_index,
                         is_first_speed_calc)
@@ -565,8 +571,8 @@ def rawdataConsumer_for_qdaq(Q_speed_nvh_list, param, gv_dict_status,
                     if recog_index == 1:
                         time.sleep(0.1)
                     # 记录开始点识别时间
-                    qDAQ_logger.debug("test index: {} detect start point at: {}".format(recog_index,
-                                                                                        time.time() - time_click_start))
+                    qDAQ_logger.debug(
+                        f"test index: {recog_index} detect start point at: {time.time() - time_click_start}")
                     # 只有第一次检测到起点才会到这里（确保开始点和结束点在同一帧，一般不会）
                     speed_start_index = rpm_index_backup
                     speed_right_index = rpm_index
@@ -730,6 +736,11 @@ def rawdataConsumer_for_qdaq(Q_speed_nvh_list, param, gv_dict_status,
                         None_for_put = False
 
             if not None_for_put:
+                if recog_index == preRecogIndex:
+                    recog_index__ = recog_index
+                else:
+                    recog_index__ = recog_index - 1
+                    preRecogIndex = recog_index
                 qdata = {
                     # 测试段开始点vib信号的索引，一个测试段内该值不变
                     'vib_start_index': vib_start_index,
@@ -741,8 +752,8 @@ def rawdataConsumer_for_qdaq(Q_speed_nvh_list, param, gv_dict_status,
                     # 'trigger_right_index':rpm_index*param.speedCalcInfo["step"]+param.speedCalcInfo["averageNum"],
                     'trigger_right_index': index_trigger if not sectionEnd_for_put else
                     (gv_dict_speedRecog['endpoint_index'] - index_rpm_last_speed_signal) * (
-                            averageNums[recog_index] - overlaps[recog_index]) + averageNums[
-                        recog_index] + index_trigger_last_speed_signal,
+                            averageNums[recog_index__] - overlaps[recog_index__]) + averageNums[
+                        recog_index__] + index_trigger_last_speed_signal,
                     # 测试段是否结束
                     'sectionEnd': sectionEnd_for_put,
                     # 有dummy段时，dummy可有多个
@@ -758,8 +769,8 @@ def rawdataConsumer_for_qdaq(Q_speed_nvh_list, param, gv_dict_status,
                     'speedPattern': param.speedRecogInfo['speedPattern'][
                         recogIndex_for_put],
                     'RampQuality': RampQuality,
-                    "ppr": pprs[recog_index],
-                    "speedRatio": speedRatios[recog_index]
+                    "ppr": pprs[recog_index__],
+                    "speedRatio": speedRatios[recog_index__]
                 }
 
                 # print(qdata)
@@ -768,7 +779,7 @@ def rawdataConsumer_for_qdaq(Q_speed_nvh_list, param, gv_dict_status,
                     Q_speed_nvh.put(qdata)
 
                 if sectionEnd_for_put:
-                    qDAQ_logger.debug("测试段{}识别结束:{}".format(recogIndex_for_put, time.time()))
+                    qDAQ_logger.debug(f"测试段{recogIndex_for_put}识别结束:{time.time()}")
                     qDAQ_logger.info(
                         f"test name：{param.speedRecogInfo['testName'][recogIndex_for_put]} recognition finished")
                     qDAQ_logger.debug(qdata)
@@ -795,7 +806,7 @@ def rawdataConsumer_for_qdaq(Q_speed_nvh_list, param, gv_dict_status,
                     #         left_index = index_rawdata_backup
 
                     # 判断是否需要切换信号
-                    if recog_index + 1 < testSectionNum and speedSignals[recog_index + 1] != speedSignals[recog_index]:
+                    if recog_index < testSectionNum and speedSignals[recog_index] != speedSignals[recog_index - 1]:
                         # 更新该值，上一种计算方法的到的trigger不用于转速切换后的转速计算,是第一次计算转速
                         last_rpm_cal_index = index_trigger
                         is_first_speed_calc = True
@@ -1044,10 +1055,6 @@ def rawdataConsumer_for_fluctuation_norsp(Q_speed_nvh_list, param, gv_dict_statu
 
     # 下一个将要识别的测试段是第几个测试段
     index_test = 0
-
-    rpm = list()
-    rpml = list()
-
     # 第几次向queue中放入数据
     index_queue_put = 0
     while gv_dict_flag[flag_index_dict["speedCalclation"]]:
@@ -1078,8 +1085,7 @@ def rawdataConsumer_for_fluctuation_norsp(Q_speed_nvh_list, param, gv_dict_statu
         elif running_mode == "rt" and board.lower() == "dt":
             status, transfer_status = target_ai_device.get_scan_status()
             next_data_length = (frame_counter + 1) * frame_data_len
-            frame_num = (
-                                transfer_status.current_total_count - frame_counter * frame_data_len) // frame_data_len
+            frame_num = (transfer_status.current_total_count - frame_counter * frame_data_len) // frame_data_len
             for frame_index in range(frame_num):
                 # enough data to read out
                 if transfer_status.current_total_count - frame_counter * frame_data_len <= buffer_len:

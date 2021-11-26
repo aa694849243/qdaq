@@ -323,7 +323,7 @@ def time_domain_calc_info_update(time_domian_calc_info, task_info, basic_info):
                         vib_info['unit'] = ['dB']
                     else:
                         vib_info['unit'] = [task_info['units'][k] for k in task_info['indicatorsUnitChanIndex']]
-                elif vib_info['index'].lower()[:6] == 'spl(a)': #todo 继续
+                elif vib_info['index'].lower()[:6] == 'spl(a)':
                     vib_info['unit'] = ['dB(A)']
                 elif vib_info['index'].lower()[:3] == 'spl':
                     vib_info['unit'] = ['dB']
@@ -351,11 +351,9 @@ def order_spectrum_calc_info_update(order_spectrum_calc_info, speed_calc_info, s
     """
     # 确认最大关注阶次是否合理
     if version == 1 or version == 2:
-        max_order_available = (60 * task_info['sampleRate']) / (
-                speed_recog_info['overallMinSpeed'] * 2 * 1.6384)
+        max_order_available = (60 * task_info['sampleRate']) / (speed_recog_info['overallMinSpeed'] * 2 * 1.6384)
     else:
-        max_order_available = (60 * task_info['sampleRate']) / (
-                speed_recog_info['overallMinSpeed'] * 2)
+        max_order_available = (60 * task_info['sampleRate']) / (speed_recog_info['overallMinSpeed'] * 2)
     for i in range(testSectionNum := len(order_spectrum_calc_info)):
         order_spectrum_calc_info[i] = defaultdict(list, order_spectrum_calc_info[i])
         if order_spectrum_calc_info[i]['maxOrder'] > max_order_available:
@@ -414,7 +412,7 @@ def order_spectrum_calc_info_update(order_spectrum_calc_info, speed_calc_info, s
     return order_spectrum_calc_info
 
 
-def order_cut_calc_info_update(order_cut_calc_info, order_spectrum_calc_info):
+def order_cut_calc_info_update(order_cut_calc_info, order_spectrum_calc_info, speedCalcInfo):
     """
     功能：提前计算二维阶次切片所需要的参数，主要是限制目标阶次的边界，包括：
     1. 最小阶次（orderMin）：提取阶次切片时的目标阶次应大于该最小阶次，与阶次切片的宽度有关（左右的点数）
@@ -423,6 +421,9 @@ def order_cut_calc_info_update(order_cut_calc_info, order_spectrum_calc_info):
     """
     # update the order boundary for target order confirm
     for i in range(testSectionNum := len(order_spectrum_calc_info)):
+        ratio = speedCalcInfo[i]['speedRatio']
+        for info in order_cut_calc_info[i]['indicatorInfoList']:
+            info['value'] = list(np.array(info['value']) * ratio)
         min_order_available = order_spectrum_calc_info[i]['orderResolution'] * (order_cut_calc_info[i]['pointNum'] // 2)
         max_order_available = order_spectrum_calc_info[i]['maxOrder'] - order_spectrum_calc_info[i][
             'orderResolution'] * (order_cut_calc_info[i]['pointNum'] // 2 + 1)
@@ -441,7 +442,7 @@ def order_cut_calc_info_update(order_cut_calc_info, order_spectrum_calc_info):
     return order_cut_calc_info
 
 
-def oned_os_calc_info_update(oned_os_calc_info, order_spectrum_calc_info):
+def oned_os_calc_info_update(oned_os_calc_info, order_spectrum_calc_info, speedCalcInfo):
     """
     功能：提前计算一维阶次切片指标所需要的参数，主要是限制目标阶次的边界，包括：
     1. 最小阶次（orderMin）：提取阶次切片时的目标阶次应大于该最小阶次，与阶次切片的宽度有关（左右的点数）
@@ -449,6 +450,9 @@ def oned_os_calc_info_update(oned_os_calc_info, order_spectrum_calc_info):
     返回：更新后的一维阶次切片计算参数
     """
     for i in range(testSectionNum := len(order_spectrum_calc_info)):
+        ratio = speedCalcInfo[i]['speedRatio']
+        for info in oned_os_calc_info[i]['indicatorInfoList']:
+            info['value'] = list(np.array(info['value']) * ratio)
         min_order_available = order_spectrum_calc_info[i]['orderResolution'] * (oned_os_calc_info[i]['pointNum'] // 2)
         max_order_available = order_spectrum_calc_info[i]['maxOrder'] - (
                 order_spectrum_calc_info[i]['orderResolution'] * (oned_os_calc_info[i]['pointNum'] // 2 + 1))
@@ -462,6 +466,16 @@ def oned_os_calc_info_update(oned_os_calc_info, order_spectrum_calc_info):
             raise ValueError(
                 f'test section {i}:max order of 1D order indicator: {max_order} set is out of range, should bigger than: {max_order_available}')
     return oned_os_calc_info
+
+
+def modulation_depth_calc_info_update(modulation_depth_calc_info, speedCalcInfo):
+    for i in range(testSectionNum := len(modulation_depth_calc_info)):
+        ratio = speedCalcInfo[i]['speedRatio']
+        for info in modulation_depth_calc_info[i]['modulationDepthCalcList']:
+            info['modulationOrder'] *= ratio
+            for indicator in info['indicatorInfoList']:
+                indicator['value'] *= ratio
+    return modulation_depth_calc_info
 
 
 def cepstrum_calc_info_update(order_spectrum_calc_info):
@@ -562,9 +576,6 @@ def stat_factor_calc_info_update(stat_factor_calc_info, order_spectrum_calc_info
     """
     # 更新统计学指标按圈计算参数
     for i in range(testSectionNum := len(stat_factor_calc_info)):
-        if i != stat_factor_calc_info[i]['testSectionIndex']:  # 如果测试段对不上则跳过
-            stat_factor_calc_info[i] = defaultdict(list)
-            continue
         stat_factor_calc_info[i] = defaultdict(list, stat_factor_calc_info[i])
         if 'revNum' not in stat_factor_calc_info[i]:
             # 每次计算的圈数未设置则默认为1
@@ -592,7 +603,8 @@ def stat_factor_calc_info_update(stat_factor_calc_info, order_spectrum_calc_info
                             1 - stat_factor_calc_info[i]['overlapRatio']))
 
                 # 其它轴每转过revNum，转速来源轴转了多少圈
-                stat_factor_calc_info[i]['vibrationIndicatorList'][j]['revNums'] = speedSourceOrder / \
+                stat_factor_calc_info[i]['vibrationIndicatorList'][j]['revNums'] = speedSourceOrder * \
+                                                                                   stat_factor_calc_info[i]['revNum'] / \
                                                                                    stat_factor_calc_info[i][
                                                                                        'vibrationIndicatorList'][j][
                                                                                        'value']
@@ -622,14 +634,14 @@ def stat_factor_calc_info_update(stat_factor_calc_info, order_spectrum_calc_info
                             1 - stat_factor_calc_info[i]['overlapRatio']))
 
                 # 其它轴每转过revNum，转速来源轴转了多少圈
-                stat_factor_calc_info[i]['soundIndicatorList'][j]['revNums'] = speedSourceOrder / \
+                stat_factor_calc_info[i]['soundIndicatorList'][j]['revNums'] = speedSourceOrder * \
+                                                                               stat_factor_calc_info[i]['revNum'] / \
                                                                                stat_factor_calc_info[i][
-                                                                                   'soundIndicatorList'][j][
-                                                                                   'value']
+                                                                                   'soundIndicatorList'][j]['value']
                 stat_factor_calc_info[i]['soundIndicatorList'][j]['stepNums'] = \
                     stat_factor_calc_info[i]['soundIndicatorList'][j]['revNums'] * (
                             1 - stat_factor_calc_info[i]['overlapRatio'])
-                if stat_factor_calc_info[i]['soundIndicatorList'][j]['index'].lower()[:3] == 'RMS':
+                if stat_factor_calc_info[i]['soundIndicatorList'][j]['index'].lower()[:3] == 'rms':
                     if basic_info['dBFlag']:
                         stat_factor_calc_info[i]['soundIndicatorList'][j]['unit'] = ['dB']
                     else:
@@ -735,9 +747,12 @@ class Parameters:
             self.orderSpectrumCalcInfo = order_spectrum_calc_info_update(data["orderSpectrumCalcInfo"],
                                                                          self.speedCalcInfo, self.speedRecogInfo,
                                                                          self.taskInfo)
-            self.orderCutCalcInfo = order_cut_calc_info_update(data["orderCutCalcInfo"], data["orderSpectrumCalcInfo"])
-            self.onedOSCalcInfo = oned_os_calc_info_update(data["onedOSCalcInfo"], data["orderSpectrumCalcInfo"])
-            self.modulationDepthCalcInfo = data["modulationDepthCalcInfo"]
+            self.orderCutCalcInfo = order_cut_calc_info_update(data["orderCutCalcInfo"], data["orderSpectrumCalcInfo"],
+                                                               data["speedCalcInfo"])
+            self.onedOSCalcInfo = oned_os_calc_info_update(data["onedOSCalcInfo"], data["orderSpectrumCalcInfo"],
+                                                           data["speedCalcInfo"])
+            self.modulationDepthCalcInfo = modulation_depth_calc_info_update(data["modulationDepthCalcInfo"],
+                                                                             data["speedCalcInfo"])
             self.cepstrumCalcInfo = cepstrum_calc_info_update(data['orderSpectrumCalcInfo'])
             self.limitCompareFlag = data["limitCompareFlag"]
             self.dataSaveFlag = data["dataSaveFlag"]
@@ -776,7 +791,7 @@ if __name__ == '__main__':
         from common_info import config_folder, config_file
 
         t1 = time.perf_counter()
-        type_info = "ktz999x_cj"
+        type_info = "ktz1111x_cj"
         config_filename = os.path.join(config_folder,
                                        "_".join([type_info, config_file]))
         print(config_filename)

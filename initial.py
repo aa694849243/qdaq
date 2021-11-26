@@ -16,6 +16,7 @@ import os
 import numpy as np
 import pprint
 from datetime import datetime, timedelta
+from collections import defaultdict
 
 
 def time_get():
@@ -203,17 +204,17 @@ def create_empty_twodtd_for_share(time_domain_calc_info, sensor_index, sensor_na
     4. 初始评判结果，可以指定的值进行初始化
     返回：不包含具体数值的二维时间域结果
     """
-    twodtd_result = {}
+    twodtd_result = []
     for info in time_domain_calc_info[sensor_name]:
-        twodtd_result[tuple(info['value'])] = {
-            'xName': info['xName'],
-            'xUnit': info['xUnit'],
+        twodtd_result.append({
+            'xName': time_domain_calc_info['xName'],
+            'xUnit': time_domain_calc_info['xUnit'],
             'xValue': np.zeros(max_len),
             'yName': info['index'],
-            'yUnit': info['unit'][0] if len(info['unit']) > 1 else info['unit'][sensor_index],
+            'yUnit': info['unit'][0] if len(info['unit']) == 1 else info['unit'][sensor_index],
             'yValue': [None] * max_len,
             "indicatorDiagnostic": indicator_diagnostic
-        }
+        })
     return twodtd_result
 
 
@@ -324,12 +325,12 @@ def create_empty_twodoc_for_share(order_cut_calc_info, task_info, sensor_index, 
         target_unit = 'dB'
     else:
         target_unit = task_info['units'][task_info["indicatorsUnitChanIndex"][sensor_index]]
-    for indicator in order_cut_calc_info['orderName']:
+    for indicator in order_cut_calc_info['indicatorInfoList']:
         twodoc_result.append({
             'xName': order_cut_calc_info['xName'],
             'xUnit': order_cut_calc_info['xUnit'],
             'xValue': np.zeros(os_max_len),
-            'yName': indicator,
+            'yName': indicator['index'],
             # follow the unit of NI Unit, g or Pa, or dB
             'yUnit': target_unit,
             'yValue': [None] * os_max_len,
@@ -467,21 +468,22 @@ def update_nvh_data_for_thread(twod_td, temp_td, index_twod_td, twod_sf, temp_sf
     for result in twod_td:
         result['xValue'] = result['xValue'][:index_twod_td]
         result['yValue'] = result['yValue'][:index_twod_td]
-    for key in temp_td.keys():
+    for key in temp_td:
         temp_td[key] = temp_td[key][:index_twod_td]
 
-    for key in temp_sf.keys():
-        counter_twod_sf = twod_sf_counter[key]
-        temp_sf[key]['xi2'] = temp_sf[key]['xi2'][:counter_twod_sf]
-        temp_sf[key]['xmax'] = temp_sf[key]['xmax'][:counter_twod_sf]
-        temp_sf[key]['xmean'] = temp_sf[key]['xmean'][:counter_twod_sf]
-        temp_sf[key]['xi3'] = temp_sf[key]['xi3'][:counter_twod_sf]
-        temp_sf[key]['xi4'] = temp_sf[key]['xi4'][:counter_twod_sf]
-        temp_sf[key]['xi2_A'] = temp_sf[key]['xi2_A'][:counter_twod_sf]
+    for gear in temp_sf:
+        counter_twod_sf = twod_sf_counter[gear]
+        temp_sf[gear]['xi2'] = temp_sf[gear]['xi2'][:counter_twod_sf]
+        temp_sf[gear]['xmax'] = temp_sf[gear]['xmax'][:counter_twod_sf]
+        temp_sf[gear]['xmean'] = temp_sf[gear]['xmean'][:counter_twod_sf]
+        temp_sf[gear]['xi3'] = temp_sf[gear]['xi3'][:counter_twod_sf]
+        temp_sf[gear]['xi4'] = temp_sf[gear]['xi4'][:counter_twod_sf]
+        temp_sf[gear]['xi2_A'] = temp_sf[gear]['xi2_A'][:counter_twod_sf]
 
-    for result in twod_sf:
-        result['xValue'] = result['xValue'][:twod_sf_counter[result['yName'].rsplit('-', 1)[0]]]
-        result['yValue'] = result['yValue'][:twod_sf_counter[result['yName'].rsplit('-', 1)[0]]]
+    for gear in twod_sf:
+        for index in twod_sf[gear]:
+            twod_sf[gear][index]['xValue'] = twod_sf[gear][index]['xValue'][:twod_sf_counter[gear]]
+            twod_sf[gear][index]['yValue'] = twod_sf[gear][index]['yValue'][:twod_sf_counter[gear]]
 
     threed_os['xValue'] = threed_os['xValue'][:counter_or]
     threed_os['zValue'] = threed_os['zValue'][:counter_or]
@@ -630,22 +632,23 @@ def create_empty_twodsf_for_share(stat_factor_calc_info, sensor_index, sensor_na
     4. 初始化的评判结果，默认是为-1（表示缺失）
     返回：包含结构但不包含具体数值的按圈计算结果
     """
-    twodsf_result = {}
+    twodsf_result = defaultdict(dict)
     if not stat_factor_calc_info:
         return twodsf_result
     for statInfo in stat_factor_calc_info[sensor_name]:
         # 计算得到可以进行多少次计算（即二维按圈计算结果的长度）
         max_len = rsp_max_len // statInfo['stepPoints'] + 1
-        twodsf_result[tuple(statInfo['value'])] = {'xName': statInfo['xName'],
-                                                   'xUnit': statInfo['xUnit'],
-                                                   'xValue': np.zeros(max_len),
-                                                   'yName': statInfo['index'],
-                                                   'yUnit': statInfo['unit'][0] if len(statInfo['unit']) == 1 else
-                                                   statInfo['unit'][sensor_index],
-                                                   'yValue': [None] * max_len,
-                                                   "indicatorDiagnostic": indicator_diagnostic
-                                                   }
-        return twodsf_result
+        twodsf_result[statInfo['value']][statInfo['index']] = {'xName': stat_factor_calc_info['xName'],
+                                                               'xUnit': stat_factor_calc_info['xUnit'],
+                                                               'xValue': np.zeros(max_len),
+                                                               'yName': statInfo['index'],
+                                                               'yUnit': statInfo['unit'][0] if len(
+                                                                   statInfo['unit']) == 1 else
+                                                               statInfo['unit'][sensor_index],
+                                                               'yValue': [None] * max_len,
+                                                               "indicatorDiagnostic": indicator_diagnostic
+                                                               }
+    return twodsf_result
 
 
 def create_empty_twodsf_for_const(stat_factor_calc_info, sensor_index, max_circle, indicator_diagnostic=-1):
@@ -689,13 +692,13 @@ def create_empty_tempsf_for_share(stat_factor_calc_info, sensor_index, sensor_na
     if not stat_factor_calc_info:
         return tempsf_result
     for statInfo in stat_factor_calc_info[sensor_name]:
-        maxLen = rspMaxLen // stat_factor_calc_info['stepPoints'] + 1
-        tempsf_result[tuple(statInfo['value'])] = {key: np.zeros(maxLen) for key in
-                                                   ('xi2', 'xmax', 'xmean', 'xi3', 'xi4', 'xi2_A')}
+        maxLen = rspMaxLen // statInfo['stepPoints'] + 1
+        tempsf_result[statInfo['value']] = {key: np.zeros(maxLen) for key in
+                                            ('xi2', 'xmax', 'xmean', 'xi3', 'xi4', 'xi2_A')}
         # 事先开辟了足够的内存，index为下一个需要赋值的索引，
         # 该值与同一根轴上下一个twodsf需要赋值的索引相同，也与下面的
-        tempsf_result[tuple(statInfo['value'])]['tempsf_index'] = 0
-        tempsf_result[tuple(statInfo['value'])]['counter'] = 0
+        tempsf_result[statInfo['value']]['tempsf_index'] = 0
+        tempsf_result[statInfo['value']]['counter'] = 0
     return tempsf_result
 
 

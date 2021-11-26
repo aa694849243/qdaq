@@ -831,6 +831,7 @@ def resolver(speed_sin, speed_cos, cut_level, coil, ppr, last_angle_l1f, loc_l1f
     cutted_sin = speed_sin[(abs(speed_sin) > cut_level) & (abs(speed_cos) > cut_level)]
     cutted_cos = speed_cos[(abs(speed_sin) > cut_level) & (abs(speed_cos) > cut_level)]
     # 记录剩余数据点的索引信息
+    print(f'{cutted_sin=},{cutted_cos=}')
     cutted_loc = np.where((abs(speed_sin) > cut_level) & (abs(speed_cos) > cut_level))[0]
 
     # convert into angle（0，180）

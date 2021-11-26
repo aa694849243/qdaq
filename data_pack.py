@@ -7,7 +7,7 @@ import traceback
 
 import numpy as np
 
-from common_info import limit_folder, limit_file, sensor_count, flag_index_dict, Cryptor, encrypt_flag,\
+from common_info import limit_folder, limit_file, sensor_count, flag_index_dict, Cryptor, encrypt_flag, \
     qDAQ_logger
 from ml_qdaq_predict import ml_qdaq
 from utils import write_json, read_json, send_result_data, decrypt_data
@@ -15,13 +15,14 @@ from limit_compare_new import comparator
 from json2xml import dict_to_xml, xml_write
 import gc
 
-allCount=0
-abnormalCount=0
-unqualifiedCount=0
-is_simu_mode=None
+allCount = 0
+abnormalCount = 0
+unqualifiedCount = 0
+is_simu_mode = None
+
 
 def datapack_process(Q_datapack_in, Q_datapack_out, Q_nvh_datapack):
-    global gv_dict_flag,is_simu_mode,allCount,abnormalCount,unqualifiedCount
+    global gv_dict_flag, is_simu_mode, allCount, abnormalCount, unqualifiedCount
     try:
         # 连接flag的共享内存
         shm_flag = shared_memory.SharedMemory(name="shm_flag")
@@ -31,39 +32,38 @@ def datapack_process(Q_datapack_in, Q_datapack_out, Q_nvh_datapack):
     while True:
         data = Q_datapack_in.get()
         if data == "reset":
-            allCount=0
-            abnormalCount=0
-            unqualifiedCount=0
+            allCount = 0
+            abnormalCount = 0
+            unqualifiedCount = 0
             continue
-        is_simu_mode=data["is_simu_mode"]
+        is_simu_mode = data["is_simu_mode"]
         try:
 
-            data["gv_dict_status"]["allCount"]=allCount
-            data["gv_dict_status"]["abnormalCount"]=abnormalCount
-            data["gv_dict_status"]["unqualifiedCount"]=unqualifiedCount
+            data["gv_dict_status"]["allCount"] = allCount
+            data["gv_dict_status"]["abnormalCount"] = abnormalCount
+            data["gv_dict_status"]["unqualifiedCount"] = unqualifiedCount
             dataPack(Q_nvh_datapack, data['gv_dict_status'], data['param'],
                      data['test_result'], data['time_click_start'])
         except Exception:
             qDAQ_logger.error(traceback.format_exc())
             data['gv_dict_status']["code"] = 3000
             data['gv_dict_status']["msg"] = "datapack进程出现错误!"
-            gv_dict_flag[flag_index_dict["datapack_error"]]=1
+            gv_dict_flag[flag_index_dict["datapack_error"]] = 1
         qDAQ_logger.info("data pack stop")
         Q_datapack_out.put({"datapack": 1})
         del data
 
 
 def dataPack(Q4, gv_dict_status, param, test_result, time_click_start):
-    global gv_dict_flag,allCount,abnormalCount,unqualifiedCount,is_simu_mode
+    global gv_dict_flag, allCount, abnormalCount, unqualifiedCount, is_simu_mode
 
-    result_code_dict=dict()
-    result_code_dict[-2]="不参与界限值比较"
-    result_code_dict[-1]="界限值缺失"
-    result_code_dict[0]="不合格(超上限)"
-    result_code_dict[1]="合格"
-    result_code_dict[2]="异常(rms超下限，信号异常)"
-    result_code_dict[3]="次异常(其他指标超下限)"
-
+    result_code_dict = dict()
+    result_code_dict[-2] = "不参与界限值比较"
+    result_code_dict[-1] = "界限值缺失"
+    result_code_dict[0] = "不合格(超上限)"
+    result_code_dict[1] = "合格"
+    result_code_dict[2] = "异常(rms超下限，信号异常)"
+    result_code_dict[3] = "次异常(其他指标超下限)"
 
     gc.enable()
     gv_dict_status_temp = dict()
@@ -75,7 +75,7 @@ def dataPack(Q4, gv_dict_status, param, test_result, time_click_start):
     counter_test = 0
 
     qDAQ_logger.debug("dataPack:pid={},ppid={},thread={}".format(os.getpid(), os.getppid(),
-                                                           threading.current_thread().name))
+                                                                 threading.current_thread().name))
 
     limits_filename = "_".join([param.basicInfo["type"], limit_file])
     full_limit_path = os.path.join(limit_folder, limits_filename)
@@ -128,15 +128,13 @@ def dataPack(Q4, gv_dict_status, param, test_result, time_click_start):
                 qDAQ_logger.error("limit compare failed, failed msg:" + traceback.format_exc())
                 break
 
-
         qDAQ_logger.info("limit compare finsih")
 
         # 智能预测
-        sectionMlResult=dict()
+        sectionMlResult = dict()
         try:
             for sensor_id in range(sensor_count):
                 if not error_flag:
-
                     # 没有错误才能进行评判
                     intelligenceResult = ml_qdaq(test_result["type"], test_result["systemNo"],
                                                  str(sensor_id),
@@ -152,7 +150,7 @@ def dataPack(Q4, gv_dict_status, param, test_result, time_click_start):
                     # 1-bad 0-good -1 no-mark 0-1中的double数据
                     allIntelligenceDefectDescription.append(intelligenceResult["ml_quality"])
                     qDAQ_logger.debug(test_result["resultData"][sensor_id]["sensorId"])
-                    sectionMlResult[test_result["resultData"][sensor_id]["sensorId"]]=intelligenceResult["ml_sensor"]
+                    sectionMlResult[test_result["resultData"][sensor_id]["sensorId"]] = intelligenceResult["ml_sensor"]
         except Exception:
             traceback.print_exc()
             qDAQ_logger.error("ml failed, failed msg:" + traceback.format_exc())
@@ -165,11 +163,10 @@ def dataPack(Q4, gv_dict_status, param, test_result, time_click_start):
         sectionLimitResult = dict()
         for i in range(sensor_count):
             sectionLimitResult[test_result["resultData"][i]["sensorId"]] = \
-            test_result["resultData"][i]["dataSection"][testNameIndex]["testResult"]
+                test_result["resultData"][i]["dataSection"][testNameIndex]["testResult"]
         gv_dict_status_temp["sectionResult"]["limitComResult"].append(sectionLimitResult)
         gv_dict_status_temp["sectionResult"]["mlResult"].append(sectionMlResult)
-        gv_dict_status["sectionResult"]=gv_dict_status_temp["sectionResult"]
-
+        gv_dict_status["sectionResult"] = gv_dict_status_temp["sectionResult"]
 
         try:
             gv_dict_status_temp['xml'] = gv_dict_status['xml']
@@ -177,20 +174,18 @@ def dataPack(Q4, gv_dict_status, param, test_result, time_click_start):
                                result["testNameIndex"]]["twodOC"][0]["xValue"])
             qDAQ_logger.debug("rev num of test index: {} is {}".format(counter_test, revCount))
             gv_dict_status_temp["xml"].append(
-                dict_to_xml(test_result, testNameIndex, param.orderSpectrumCalcInfo["orderResolution"],
-                            int(param.orderSpectrumCalcInfo["revNum"] * (
-                                    1 - param.orderSpectrumCalcInfo["overlapRatio"])),
-                            revCount))
+                dict_to_xml(test_result, testNameIndex, param.orderSpectrumCalcInfo[testNameIndex]["orderResolution"],
+                            int(param.orderSpectrumCalcInfo[testNameIndex]["revNum"] * (
+                                        1 - param.orderSpectrumCalcInfo[testNameIndex]["overlapRatio"])), revCount))
             gv_dict_status['xml'] = gv_dict_status_temp['xml']
-
             if param.dataSaveFlag['xml']:
                 xml_filename = os.path.join(param.folderInfo["temp"], param.speedRecogInfo['testName'][
                     testNameIndex] + '_' + gv_dict_status["data"]['type'] + '_' + param.basicInfo[
                                                 "fileName"] + '.xml')
                 xml_write(gv_dict_status["xml"][-1], xml_filename)
-                qDAQ_logger.info("xml of test index: {} saved, filename: {}".format(counter_test, xml_filename))
+                qDAQ_logger.info(f"xml of test index: {counter_test} saved, filename: {xml_filename}")
             else:
-                qDAQ_logger.info("xml of test index: {} xml not saved".format(counter_test))
+                qDAQ_logger.info(f"xml of test index: {counter_test} xml not saved")
         except Exception:
             gv_dict_status["code"] = 3000
             gv_dict_status["msg"] = "xml生成出错!"
@@ -229,17 +224,17 @@ def dataPack(Q4, gv_dict_status, param, test_result, time_click_start):
 
             # 统计实采模式下一共检测的数量，以及异常数量，不合格数量
             if not is_simu_mode:
-                allCount+=1
+                allCount += 1
                 # 异常
-                if test_result["overallResult"] in [2,3]:
-                    abnormalCount+=1
+                if test_result["overallResult"] in [2, 3]:
+                    abnormalCount += 1
                 # 不合格
                 if test_result["overallResult"] == 0:
-                    unqualifiedCount+=1
+                    unqualifiedCount += 1
 
-            gv_dict_status["allCount"]=allCount
-            gv_dict_status["abnormalCount"]=abnormalCount
-            gv_dict_status["unqualifiedCount"]=unqualifiedCount
+            gv_dict_status["allCount"] = allCount
+            gv_dict_status["abnormalCount"] = abnormalCount
+            gv_dict_status["unqualifiedCount"] = unqualifiedCount
 
             gv_dict_status["code"] = 4
 
@@ -276,7 +271,7 @@ def dataPack(Q4, gv_dict_status, param, test_result, time_click_start):
                 gv_dict_status['data'] = gv_dict_status_temp['data']
                 if report_path:
                     gv_dict_status["msg"] = "结果数据上传完成！"
-                    qDAQ_logger.info("*"*30+str(gv_dict_status["data"]["testResult"])+"&"*30)
+                    qDAQ_logger.info("*" * 30 + str(gv_dict_status["data"]["testResult"]) + "&" * 30)
                     qDAQ_logger.info('data send succeed!')
                 else:
                     gv_dict_status["msg"] = "结果数据上传失败！"
@@ -288,7 +283,7 @@ def dataPack(Q4, gv_dict_status, param, test_result, time_click_start):
                 else:
                     qDAQ_logger.info("result Json not saved!")
                 # 整个测试的所有测试段pack完成，datapack进程结束
-                gv_dict_flag[flag_index_dict["datapack_finish"]]=1
+                gv_dict_flag[flag_index_dict["datapack_finish"]] = 1
                 break
 
     qDAQ_logger.info("datapack finish")

@@ -210,6 +210,7 @@ def read_raw_data(filename, channel_names, file_type='tdms'):
                 raw_data[channel_name] = np.array(data_group[channel_name], dtype='float')
     return raw_data
 
+
 def bit24_to_int(byte_data):
     n = len(byte_data) // 3
     num = []
@@ -219,8 +220,9 @@ def bit24_to_int(byte_data):
         num.append(number)
     return num
 
-def bit_to_int(byte_data,len_vib):
-    byte_count=len_vib//8
+
+def bit_to_int(byte_data, len_vib):
+    byte_count = len_vib // 8
     n = len(byte_data) // byte_count
     num = []
     for i in range(n):
@@ -239,6 +241,8 @@ def timestamp_to_time(timestamp):
     1. 秒级时间（长整型）
     """
     return int(time.mktime(timestamp.timetuple()) * 1000)
+
+
 def copy_file(src_file, dst_folder):
     """
     功能：复制文件到目标文件夹
@@ -257,6 +261,7 @@ def copy_file(src_file, dst_folder):
     if not os.path.exists(dst_folder):
         os.makedirs(dst_folder)
     shutil.copyfile(src_file, os.path.join(dst_folder, fname))
+
 
 def send_raw_data(url_info, folder_info, data_info, format_time):
     """
@@ -308,7 +313,8 @@ def send_raw_data(url_info, folder_info, data_info, format_time):
                             # 上传数据至服务器
                             sv_ftp = ftp_connect(server_ip)
                             print(sv_ftp.getwelcome())
-                            remote_folder = folder_check(sv_ftp, basic_folder, data_info['system'], data_info['type'], data_info['serial'], format_time)
+                            remote_folder = folder_check(sv_ftp, basic_folder, data_info['system'], data_info['type'],
+                                                         data_info['serial'], format_time)
                             remote_filepath = remote_folder + '/' + data_info['fileName']
                             if file_check(sv_ftp, remote_filepath):
                                 qDAQ_logger.info("remote file {} already existed".format(remote_filepath))
@@ -320,7 +326,9 @@ def send_raw_data(url_info, folder_info, data_info, format_time):
                             sv_ftp.quit()
                             pass
                         else:
-                            remote_folder = os.path.join(os.path.join(os.path.join(os.path.join(basic_folder, data_info['system']), data_info['type']), data_info['serial']), format_time)
+                            remote_folder = os.path.join(os.path.join(
+                                os.path.join(os.path.join(basic_folder, data_info['system']), data_info['type']),
+                                data_info['serial']), format_time)
                             if not os.path.exists(remote_folder):
                                 os.makedirs(remote_folder)
                             remote_filepath = os.path.join(remote_folder, data_info['fileName'])
@@ -340,7 +348,8 @@ def send_raw_data(url_info, folder_info, data_info, format_time):
                         record_info['formatTime'] = format_time
                         record_info['status'] = 1
                         record_info['msg'] = "raw data upload or move failed"
-                        record_filename = os.path.join(folder_info["uploadError"], os.path.splitext(data_info["fileName"])[0] + '.json')
+                        record_filename = os.path.join(folder_info["uploadError"],
+                                                       os.path.splitext(data_info["fileName"])[0] + '.json')
                         with open(record_filename, 'w') as f:
                             json.dump(record_info, f)
                         return False
@@ -354,7 +363,8 @@ def send_raw_data(url_info, folder_info, data_info, format_time):
                             headers = {'Content-Type': 'application/json;charset=UTF-8', 'from': 'Y'}
                             # 发送请求，并获取返回信息，可以设置超时时间以避免长时间无响应导致一直等待，timeout = 3
                             # 这里用的是post请求，参数是通过data传入的
-                            response = requests.post(url_info['dataAnalysis'], headers=headers, data=json.dumps(data_info), timeout=3)
+                            response = requests.post(url_info['dataAnalysis'], headers=headers,
+                                                     data=json.dumps(data_info), timeout=3)
                             qDAQ_logger.info('raw data analysis: {}'.format(response.text))
                             print(response.url)
                             return True
@@ -501,7 +511,7 @@ def read_json(filename, flag=0):
         data = pickle.loads(open(filename, "rb").read())
     else:
         # 直接读取
-        with open(filename, 'r',encoding='UTF-8') as f:
+        with open(filename, 'r', encoding='gbk') as f:
             data = json.load(f)
             f.close()
     return data

@@ -26,19 +26,19 @@
 		{
 			"vibrationIndicatorList": [
 				{
-					"index": "RMS",
+					"index": "RMS_1v_1",
 					"name": "中文一",
 					"value": 1,
 					"desc": "描述1"
 				},
 				{
-					"index": "Crest",
+					"index": "Crest_2v_1",
 					"name": "中文二",
 					"value": 2,
 					"desc": "描述2"
 				},
 				{
-					"index": "Kurtosis",
+					"index": "Kurtosis_3v_1",
 					"name": "中文三",
 					"value": 3,
 					"desc": "描述3"
@@ -47,19 +47,19 @@
 			],
 			"soundIndicatorList": [
 				{
-					"index": "SPL",
+					"index": "RMS_1s_1",
 					"name": "中文一",
 					"value": 1,
 					"desc": "描述1"
 				},
 				{
-					"index": "Crest",
+					"index": "Crest_2s_1",
 					"name": "中文二",
 					"value": 2,
 					"desc": "描述2"
 				},
 				{
-					"index": "Kurtosis",
+					"index": "Kurtosis_3s_1",
 					"name": "中文三",
 					"value": 3,
 					"desc": "描述3"
@@ -67,25 +67,24 @@
 			],
 			"overlapRev": 0,
 			"revNum": 3,
-			"speedSourceOrder": 1,
-			"testSectionIndex": 0
+			"speedSourceOrder": 1
 		},
 		{
 			"vibrationIndicatorList": [
 				{
-					"index": "RMS",
+					"index": "RMS_1v_2",
 					"name": "中文一",
 					"value": 1,
 					"desc": "描述1"
 				},
 				{
-					"index": "Crest",
+					"index": "Crest_2v_2",
 					"name": "中文二",
 					"value": 2,
 					"desc": "描述2"
 				},
 				{
-					"index": "Kurtosis",
+					"index": "Kurtosis_3v_2",
 					"name": "中文三",
 					"value": 3,
 					"desc": "描述3"
@@ -93,19 +92,19 @@
 			],
 			"soundIndicatorList": [
 				{
-					"index": "SPL",
+					"index": "RMS_1s_2",
 					"name": "中文一",
 					"value": 1,
 					"desc": "描述1"
 				},
 				{
-					"index": "Crest",
+					"index": "Crest_2s_2",
 					"name": "中文二",
 					"value": 2,
 					"desc": "描述2"
 				},
 				{
-					"index": "Kurtosis",
+					"index": "Kurtosis_3s_2",
 					"name": "中文三",
 					"value": 3,
 					"desc": "描述3"
@@ -113,8 +112,7 @@
 			],
 			"overlapRev": 0,
 			"revNum": 3,
-			"speedSourceOrder": 1,
-			"testSectionIndex": 1
+			"speedSourceOrder": 1
 		}
 	],
 	"limitCompareFlag": {
@@ -136,13 +134,13 @@
 					"sideFrequencyCount": 3,
 					"indicatorInfoList": [
 						{
-							"index": "md-48-1",
+							"index": "md-48-1_1",
 							"name": "中文名1",
 							"value": 1.0,
 							"desc": "描述1"
 						},
 						{
-							"index": "md-48-8",
+							"index": "md-48-8_1",
 							"name": "中文名2",
 							"value": 8.0,
 							"desc": "描述2"
@@ -160,13 +158,13 @@
 					"sideFrequencyCount": 3,
 					"indicatorInfoList": [
 						{
-							"index": "md-48-1",
+							"index": "md-48-1_1",
 							"name": "中文名1",
 							"value": 1.0,
 							"desc": "描述1"
 						},
 						{
-							"index": "md-48-8",
+							"index": "md-48-8_2",
 							"name": "中文名2",
 							"value": 8.0,
 							"desc": "描述2"
@@ -181,7 +179,7 @@
 		{
 			"indicatorInfoList": [
 				{
-					"index": "123ords_2D",
+					"index": "123ords_2D_1",
 					"name": "123阶次切片",
 					"value": [
 						1.0,
@@ -191,7 +189,7 @@
 					"desc": "描述"
 				},
 				{
-					"index": "3.57ords_2D",
+					"index": "3.57ords_2D_1",
 					"name": "3.57阶次切片",
 					"value": [
 						3.57
@@ -204,7 +202,7 @@
 		{
 			"indicatorInfoList": [
 				{
-					"index": "123ords_2D",
+					"index": "123ords_2D_2",
 					"name": "123阶次切片",
 					"value": [
 						1.0,
@@ -214,7 +212,7 @@
 					"desc": "描述"
 				},
 				{
-					"index": "3.57ords_2D",
+					"index": "3.57ords_2D_2",
 					"name": "3.57阶次切片",
 					"value": [
 						3.57
@@ -229,7 +227,7 @@
 		{
 			"indicatorInfoList": [
 				{
-					"index": "123ords_2D",
+					"index": "123ords_2D_1",
 					"name": "123阶次切片",
 					"value": [
 						1.0,
@@ -239,7 +237,7 @@
 					"desc": "描述"
 				},
 				{
-					"index": "3.57ords_2D",
+					"index": "3.57ords_2D_1",
 					"name": "3.57阶次切片",
 					"value": [
 						3.57
@@ -252,7 +250,7 @@
 		{
 			"indicatorInfoList": [
 				{
-					"index": "123ords_2D",
+					"index": "123ords_2D_2",
 					"name": "123阶次切片",
 					"value": [
 						1.0,
@@ -262,7 +260,7 @@
 					"desc": "描述"
 				},
 				{
-					"index": "3.57ords_2D",
+					"index": "3.57ords_2D_2",
 					"name": "3.57阶次切片",
 					"value": [
 						3.57
@@ -485,41 +483,41 @@
 		{
 			"vibrationIndicatorList": [
 				{
-					"index": "RMS",
+					"index": "RMS_time_1v_1",
 					"name": "中文一",
-					"value": 1,
+					"value": [1],
 					"desc": "描述1"
 				},
 				{
-					"index": "Crest",
+					"index": "Crest_time_2v_1",
 					"name": "中文二",
-					"value": 2,
+					"value": [2],
 					"desc": "描述2"
 				},
 				{
-					"index": "Kurtosis",
+					"index": "Kurtosis_time_3v_1",
 					"name": "中文三",
-					"value": 3,
+					"value": [3],
 					"desc": "描述3"
 				}
 			],
 			"soundIndicatorList": [
 				{
-					"index": "SPL",
+					"index": "RMS_time_1s_1",
 					"name": "中文一",
-					"value": 1,
+					"value": [1],
 					"desc": "描述1"
 				},
 				{
-					"index": "Crest",
+					"index": "Crest_time_2s_1",
 					"name": "中文二",
-					"value": 2,
+					"value": [2],
 					"desc": "描述2"
 				},
 				{
-					"index": "Kurtosis",
+					"index": "Kurtosis_time_3s_1",
 					"name": "中文三",
-					"value": 3,
+					"value": [3],
 					"desc": "描述3"
 				}
 			],
@@ -528,41 +526,41 @@
 		{
 			"vibrationIndicatorList": [
 				{
-					"index": "RMS",
+					"index": "RMS_time_1v_2",
 					"name": "中文一",
-					"value": 1,
+					"value": [1],
 					"desc": "描述1"
 				},
 				{
-					"index": "Crest",
+					"index": "Crest_time_2v_2",
 					"name": "中文二",
-					"value": 2,
+					"value": [2],
 					"desc": "描述2"
 				},
 				{
-					"index": "Kurtosis",
+					"index": "Kurtosis_time_3v_2",
 					"name": "中文三",
-					"value": 3,
+					"value": [3],
 					"desc": "描述3"
 				}
 			],
 			"soundIndicatorList": [
 				{
-					"index": "SPL",
+					"index": "RMS_time_1s_2",
 					"name": "中文一",
-					"value": 1,
+					"value": [1],
 					"desc": "描述1"
 				},
 				{
-					"index": "Crest",
+					"index": "Crest_time_2s_2",
 					"name": "中文二",
-					"value": 2,
+					"value": [2],
 					"desc": "描述2"
 				},
 				{
-					"index": "Kurtosis",
+					"index": "Kurtosis_time_3s_3",
 					"name": "中文三",
-					"value": 3,
+					"value": [3],
 					"desc": "描述3"
 				}
 			],

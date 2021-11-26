@@ -1,0 +1,467 @@
+{
+  "basicInfo": {
+    "sensorId": [
+      "sensor01",
+      "sensor02",
+      "sensor03"
+    ],
+    "systemNo": "shiroha",
+    "type": "resolver-ttl"
+  },
+  "filterInfo": {
+    "dType": "lowpass",
+    "wn": [
+      10000
+    ]
+  },
+  "onedOSCalcInfo": [
+    {
+      "indicatorInfoList": [
+        {
+          "index": "123ords_2D_1",
+          "value": [
+            1.0,
+            2.0,
+            3.0
+          ]
+        },
+        {
+          "index": "4ord_2D_1",
+          "value": [
+            4.0
+          ]
+        }
+      ],
+      "pointNum": 17
+    },
+    {
+      "indicatorInfoList": [
+        {
+          "index": "123ords_2D_2",
+          "value": [
+            1.0,
+            2.0,
+            3.0
+          ]
+        },
+        {
+          "index": "4ord_2D",
+          "value": [
+            4.0
+          ]
+        }
+      ],
+      "pointNum": 17
+    }
+  ],
+  "modulationDepthCalcInfo": [
+    {
+      "modulationDepthCalcList": [
+        {
+          "modulationOrder": 48,
+          "harmonicCount": 2,
+          "indicatorInfoList": [
+            {
+              "index": "md-48-1_1",
+              "value": 1.0
+            },
+            {
+              "index": "md-48-8_1",
+              "value": 8.0
+            }
+          ],
+          "sideFrequencyCount": 3
+        }
+      ],
+      "pointNum": 3
+    },
+    {
+      "modulationDepthCalcList": [
+        {
+          "modulationOrder": 48,
+          "harmonicCount": 2,
+          "indicatorInfoList": [
+            {
+              "index": "md-48-1_2",
+              "value": 1.0
+            },
+            {
+              "index": "md-48-8_2",
+              "value": 8.0
+            }
+          ],
+          "sideFrequencyCount": 3
+        }
+      ],
+      "pointNum": 3
+    }
+  ],
+  "orderCutCalcInfo": [
+    {
+      "indicatorInfoList": [
+        {
+          "index": "123ords_2D_1",
+          "value": [
+            1.0,
+            2.0,
+            3.0
+          ]
+        },
+        {
+          "index": "4ords_2D_1",
+          "value": [
+            4.0
+          ]
+        }
+      ],
+      "pointNum": 17
+    },
+    {
+      "indicatorInfoList": [
+        {
+          "index": "123ords_2D_2",
+          "value": [
+            1.0,
+            2.0,
+            3.0
+          ]
+        },
+        {
+          "index": "4ords_2D_2",
+          "value": [
+            4.0
+          ]
+        }
+      ],
+      "pointNum": 17
+    }
+  ],
+  "orderSpectrumCalcInfo": [
+    {
+      "maxOrder": 128,
+      "orderResolution": 0.03125,
+      "overlapRatio": 0.75,
+      "revNum": 32,
+      "window": [
+        "kaiser",
+        "hanning",
+        "kaiser"
+      ],
+      "winCorrectFlag": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "maxOrder": 128,
+      "orderResolution": 0.03125,
+      "overlapRatio": 0.75,
+      "revNum": 32,
+      "window": [
+        "kaiser",
+        "hanning",
+        "kaiser"
+      ],
+      "winCorrectFlag": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "speedCalcInfo": [
+    {
+      "name": "test1",
+      "speedSignal": "resolver",
+      "triggerLevel": 0.5,
+      "triggerMode": "Rising",
+      "ppr": 72,
+      "averageNum": 144,
+      "overlap": 120,
+      "coils": 4,
+      "channelName": [
+        "Sin"
+      ],
+      "speedRatio": 1.0
+    },
+    {
+      "name": "test2",
+      "speedSignal": "ttl",
+      "triggerLevel": 5,
+      "triggerMode": "Rising",
+      "ppr": 1024,
+      "averageNum": 64,
+      "overlap": 0,
+      "coils": 4,
+      "channelName": [
+        "Speed"
+      ],
+      "speedRatio": 1.0
+    }
+  ],
+  "speedRecogInfo": {
+    "speedRange": 600,
+    "testName": [
+      "drive1",
+      "const1"
+    ],
+    "startSpeed": [
+      2500,
+      1850
+    ],
+    "endSpeed": [
+      4000,
+      2100
+    ],
+    "fluctuationT": [
+      0.2,
+      2
+    ],
+    "minT": [
+      3,
+      3
+    ],
+    "expectT": [
+      8,
+      8
+    ],
+    "maxT": [
+      15,
+      15
+    ],
+    "permittedExceptions": [
+      10,
+      20
+    ]
+  },
+  "ssaCalcInfo": {
+    "gearRatio": [
+      1.0
+    ],
+    "onInputShaft": 0
+  },
+  "taskInfo": {
+    "bufferSize": 1000000,
+    "channelNames": [
+      "Sin",
+      "Cos",
+      "Speed",
+      "Vib1",
+      "Vib2",
+      "Vib3"
+    ],
+    "channelType": [
+      "Volt",
+      "Volt",
+      "Volt",
+      "Accel",
+      "Accel",
+      "Accel"
+    ],
+    "current_excit_val": [
+      1.0,
+      1.0,
+      1.0,
+      0.0021,
+      0.0021,
+      0.0021
+    ],
+    "maxVal": [
+      10,
+      10,
+      10,
+      500,
+      500,
+      500
+    ],
+    "minVal": [
+      -10,
+      -10,
+      -10,
+      -500,
+      -500,
+      -500
+    ],
+    "physicalChannels": [
+      "ai0",
+      "ai1",
+      "ai2",
+      "ai3",
+      "ai4",
+      "ai5"
+    ],
+    "sampleRate": 102400,
+    "sampsPerChan": 8192,
+    "sensitivity": [
+      1.0,
+      1.0,
+      1.0,
+      9.85,
+      9.85,
+      9.85
+    ],
+    "units": [
+      "Volts",
+      "Volts",
+      "Volts",
+      "g",
+      "g",
+      "g"
+    ],
+    "coeff": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "timeout": 400,
+    "indicatorsUnitChanIndex": 2
+  },
+  "timeDomainCalcInfo": [
+    {
+      "vibrationIndicatorList": [
+        {
+          "index": "RMS_time_1v_1"
+        },
+        {
+          "index": "Crest_time_1v_1"
+        },
+        {
+          "index": "Kurtosis_time_1v_1"
+        }
+      ],
+      "soundIndicatorList": [
+        {
+          "index": "RMS_time_1s_1"
+        },
+        {
+          "index": "Crest_time_1s_1"
+        },
+        {
+          "index": "Kurtosis_time_1s_1"
+        }
+      ],
+      "calRate": 10
+    },
+    {
+      "vibrationIndicatorList": [
+        {
+          "index": "RMS_time_1v_2"
+        },
+        {
+          "index": "Crest_time_1v_2"
+        },
+        {
+          "index": "Kurtosis_time_1v_2"
+        }
+      ],
+      "soundIndicatorList": [
+        {
+          "index": "RMS_time_1s_2"
+        },
+        {
+          "index": "Crest_time_1s_2"
+        },
+        {
+          "index": "Kurtosis_time_1s_2"
+        }
+      ],
+      "calRate": 10
+    }
+  ],
+  "indicatorByRevCalcInfo": [
+    {
+      "vibrationIndicatorList": [
+        {
+          "index": "Skewness_1v_1",
+          "value": 1
+        },
+        {
+          "index": "Crest_1v_1",
+          "value": 1
+        },
+        {
+          "index": "Kurtosis_1v_1",
+          "value": 1
+        }
+      ],
+      "soundIndicatorList": [
+        {
+          "index": "Skewness_1s_1",
+          "value": 1
+        },
+        {
+          "index": "Crest_1s_1",
+          "value": 1
+        },
+        {
+          "index": "Kurtosis_1s_1",
+          "value": 1
+        }
+      ],
+      "overlapRev": 0,
+      "revNum": 3,
+      "speedSourceOrder": 1
+    },
+    {
+      "vibrationIndicatorList": [
+        {
+          "index": "Skewness_1v_2",
+          "value": 1
+        },
+        {
+          "index": "Crest_1v_2",
+          "value": 1
+        },
+        {
+          "index": "Kurtosis_1v_2",
+          "value": 1
+        }
+      ],
+      "soundIndicatorList": [
+        {
+          "index": "Skewness_1s_2",
+          "value": 1
+        },
+        {
+          "index": "Crest_1s_2",
+          "value": 1
+        },
+        {
+          "index": "Kurtosis_1s_2",
+          "value": 1
+        }
+      ],
+      "overlapRev": 0,
+      "revNum": 3,
+      "speedSourceOrder": 2
+    }
+  ],
+  "timeFreqMapCalcInfo": {
+    "freqMax": 25000,
+    "nfft": 5,
+    "noverlap": 5000,
+    "nperseg": 10000,
+    "window": "hanning"
+  },
+  "limitCompareFlag": {
+    "oned": 0,
+    "twodOC": 1,
+    "twodTD": 0,
+    "twodOS": 0,
+    "twodCeps": 0,
+    "line": 1,
+    "area": 0,
+    "overLimit": 0
+  },
+  "dataSaveFlag": {
+    "rawData": 1,
+    "colorMap": 0,
+    "speedCurve": 1,
+    "xml": 0,
+    "resultJson": 1
+  },
+  "simuInfo": {
+    "fileFolder": "D:/qdaq/Simu/"
+  }
+}
