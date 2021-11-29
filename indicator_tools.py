@@ -25,6 +25,7 @@ from common_info import qDAQ_logger
 from cytoolz import pluck
 import matplotlib.pyplot as plt
 from collections import defaultdict
+from numba import njit, vectorize, guvectorize, float64
 
 
 def butter_filter(signal, wn, fs, order=3, btype='lowpass'):
@@ -108,6 +109,7 @@ def A_weighting(Fs):
     return bilinear(NUMs, DENs, Fs)
 
 
+@njit(nogil=True, fastmath=True)
 def rms(data):
     """
     功能：计算rms
@@ -119,9 +121,10 @@ def rms(data):
     :return
     result(float): only one value after RMS of data
     """
-    return np.sqrt(sum(np.power(data, 2)) / len(data))
+    return np.sqrt(np.square(data).sum() / len(data))
 
 
+@njit(nogil=True, fastmath=True)
 def kurtosis(xi4, xi3, xi2, mean_value, size):
     """
     功能：根据二维kurtosis的中间结果计算一维kurtosis值
@@ -142,11 +145,11 @@ def kurtosis(xi4, xi3, xi2, mean_value, size):
     :return:
     result(float): 1D kurtosis value
     """
-    return ((xi4 - 4 * mean_value * xi3 + 6 * np.power(mean_value,
-                                                       2) * xi2 - 3 * size * np.power(
-        mean_value, 4)) * size / np.power(xi2 - size * np.power(mean_value, 2), 2))
+    return ((xi4 - 4 * mean_value * xi3 + 6 * np.power(mean_value, 2) * xi2 - 3 * size * np.power(mean_value,
+                                                                                                 4)) * size / np.power(
+        xi2 - size * np.power(mean_value, 2), 2))
 
-
+@njit(nogil=True, fastmath=True)
 def skewness(xi3, xi2, mean_value, size):
     """
     功能：根据二维skewness的中间结果计算一维skewness值
@@ -170,7 +173,7 @@ def skewness(xi3, xi2, mean_value, size):
         size)
             / np.power(xi2 - size * np.power(mean_value, 2), 1.5))
 
-
+@njit(nogil=True, fastmath=True)
 def twodtd_rms(data, size):
     """
     功能：计算二维rms结果
@@ -192,7 +195,7 @@ def twodtd_rms(data, size):
     rms_value = np.sqrt(xi2 / size)
     return rms_value, xi2
 
-
+@njit(nogil=True, fastmath=True)
 def twodtd_crest(data, size):
     """
     功能：计算二维峰值因子Crest
@@ -215,7 +218,7 @@ def twodtd_crest(data, size):
     crest = max_value / np.sqrt(xi2 / size)
     return crest, max_value, xi2
 
-
+@njit(nogil=True, fastmath=True)
 def twodtd_kurtosis(data, size):
     """
     功能：计算二维峰度指标kurtosis
@@ -245,7 +248,7 @@ def twodtd_kurtosis(data, size):
     kur = kurtosis(xi4, xi3, xi2, mean_value, size)
     return kur, mean_value, xi4, xi3, xi2
 
-
+@njit(nogil=True, fastmath=True)
 def twodtd_skewness(data, size):
     """
     功能：计算二维偏度指标skewness
@@ -273,7 +276,7 @@ def twodtd_skewness(data, size):
     skew = skewness(xi3, xi2, mean_value, size)
     return skew, mean_value, xi3, xi2
 
-
+@njit(nogil=True, fastmath=True)
 def twod_spl(data, size):
     """
     功能：计算二维声压级（随时间或转速变化），参考声压级为2*10-5Pa，该算法是基于信号的rms计算声压级的
@@ -287,7 +290,7 @@ def twod_spl(data, size):
     rms_value, xi2 = twodtd_rms(data, size)
     return 20 * np.log10(rms_value / (2 * 10 ** -5)), xi2
 
-
+#todo 传入的字典，numba并不支持，后续修改方式1.numpy结构体2.直接传入numpy数组3.用numba重写ufunc
 def oned_rms(temptd, calc_size):
     """
     功能：基于中间量计算一维rms值
@@ -298,7 +301,6 @@ def oned_rms(temptd, calc_size):
     """
     return np.sqrt(np.sum(temptd['xi2']) / (calc_size * len(temptd['xi2'])))
 
-
 def oned_crest(temptd, calc_size):
     """
     功能：基于中间量计算一维crest值
@@ -308,7 +310,6 @@ def oned_crest(temptd, calc_size):
     返回：一维crest结果
     """
     return np.max(temptd['xmax']) / oned_rms(temptd, calc_size)
-
 
 def oned_kurtosis(temptd, calc_size):
     """
@@ -325,7 +326,6 @@ def oned_kurtosis(temptd, calc_size):
     size = len(temptd['xi4']) * calc_size
     return kurtosis(xi4, xi3, xi2, mean_value, size)
 
-
 def oned_skewness(temptd, calc_size):
     """
     功能：基于中间量计算一维skewness值
@@ -340,7 +340,6 @@ def oned_skewness(temptd, calc_size):
     size = len(temptd['xi3']) * calc_size
     return skewness(xi3, xi2, mean_value, size)
 
-
 def oned_spl(temptd, calc_size):
     """
     功能：基于中间量计算一维SPL值（基于得到的rms计算声压级）
@@ -350,7 +349,6 @@ def oned_spl(temptd, calc_size):
     返回：一维SPL结果
     """
     return 20 * np.log10(oned_rms(temptd, calc_size) / (2 * 10 ** -5))
-
 
 def oned_a_spl(temptd, calc_size):
     """
@@ -370,7 +368,7 @@ def oned_a_spl(temptd, calc_size):
             np.sum(temptd['xi2_A']) / (calc_size * len(temptd['xi2_A']))) / (
                                      2 * 10 ** -5))
 
-
+@njit(nogil=True, fastmath=True)
 def db_convertion(data, ref_value):
     """
     功能：转换为dB值
@@ -380,7 +378,6 @@ def db_convertion(data, ref_value):
     返回：转换后的结果
     """
     return np.around(20 * np.log10(np.abs(data) / ref_value), 2)
-
 
 def oned_time_domain(temptd, calc_size, time_domain_calc_info, sensor_index, sensor_name,
                      db_flag=0):

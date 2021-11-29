@@ -27,41 +27,29 @@
       "vibrationIndicatorList": [
         {
           "index": "Skewness_1v_1",
-          "name": "中文一",
-          "value": 1,
-          "desc": "描述1"
+          "value": 1
         },
         {
           "index": "Crest_2v_1",
-          "name": "中文二",
-          "value": 2,
-          "desc": "描述2"
+          "value": 2
         },
         {
           "index": "Kurtosis_3v_1",
-          "name": "中文三",
-          "value": 4,
-          "desc": "描述3"
+          "value": 4
         }
       ],
       "soundIndicatorList": [
         {
           "index": "Skewness_1s_1",
-          "name": "中文一",
-          "value": 1,
-          "desc": "描述1"
+          "value": 1
         },
         {
           "index": "Crest_2s_1",
-          "name": "中文二",
-          "value": 2,
-          "desc": "描述2"
+          "value": 2
         },
         {
           "index": "Kurtosis_3s_1",
-          "name": "中文三",
-          "value": 4,
-          "desc": "描述3"
+          "value": 4
         }
       ],
       "overlapRev": 0,
@@ -72,41 +60,29 @@
       "vibrationIndicatorList": [
         {
           "index": "Skewness_1v_2",
-          "name": "中文一",
-          "value": 1,
-          "desc": "描述1"
+          "value": 1
         },
         {
           "index": "Crest_2v_2",
-          "name": "中文二",
-          "value": 2,
-          "desc": "描述2"
+          "value": 2
         },
         {
           "index": "Kurtosis_3v_2",
-          "name": "中文三",
-          "value": 4,
-          "desc": "描述3"
+          "value": 4
         }
       ],
       "soundIndicatorList": [
         {
           "index": "Skewness_1s_2",
-          "name": "中文一",
-          "value": 1,
-          "desc": "描述1"
+          "value": 1
         },
         {
           "index": "Crest_2s_2",
-          "name": "中文二",
-          "value": 2,
-          "desc": "描述2"
+          "value": 2
         },
         {
           "index": "Kurtosis_3s_2",
-          "name": "中文三",
-          "value": 4,
-          "desc": "描述3"
+          "value": 4
         }
       ],
       "overlapRev": 0,
@@ -134,15 +110,11 @@
           "indicatorInfoList": [
             {
               "index": "md-48-1_1",
-              "name": "中文名1",
-              "value": 4.0,
-              "desc": "描述1"
+              "value": 4.0
             },
             {
               "index": "md-48-8_1",
-              "name": "中文名2",
-              "value": 32.0,
-              "desc": "描述2"
+              "value": 32.0
             }
           ]
         }
@@ -158,15 +130,11 @@
           "indicatorInfoList": [
             {
               "index": "md-48-1_1",
-              "name": "中文名1",
-              "value": 2.0,
-              "desc": "描述1"
+              "value": 2.0
             },
             {
               "index": "md-48-8_2",
-              "name": "中文名2",
-              "value": 16.0,
-              "desc": "描述2"
+              "value": 16.0
             }
           ]
         }
@@ -179,21 +147,17 @@
       "indicatorInfoList": [
         {
           "index": "123ords_2D_1",
-          "name": "123阶次切片",
           "value": [
             4.0,
             8.0,
             12.0
-          ],
-          "desc": "描述"
+          ]
         },
         {
           "index": "4ord_2D",
-          "name": "4阶次切片",
           "value": [
             16.0
-          ],
-          "desc": "描述"
+          ]
         }
       ],
       "pointNum": 17
@@ -202,21 +166,17 @@
       "indicatorInfoList": [
         {
           "index": "123ords_2D_2",
-          "name": "123阶次切片",
           "value": [
             2.0,
             4.0,
             6.0
-          ],
-          "desc": "描述"
+          ]
         },
         {
           "index": "4ord_2D",
-          "name": "4阶次切片",
           "value": [
             8.0
-          ],
-          "desc": "描述"
+          ]
         }
       ],
       "pointNum": 17
@@ -227,21 +187,17 @@
       "indicatorInfoList": [
         {
           "index": "123ords_2D_1",
-          "name": "123阶次切片",
           "value": [
             4.0,
             8.0,
             12.0
-          ],
-          "desc": "描述"
+          ]
         },
         {
           "index": "4ords_2D_1",
-          "name": "4阶次切片",
           "value": [
             16.0
-          ],
-          "desc": "描述"
+          ]
         }
       ],
       "pointNum": 17
@@ -250,21 +206,17 @@
       "indicatorInfoList": [
         {
           "index": "123ords_2D_2",
-          "name": "123阶次切片",
           "value": [
             2.0,
             4.0,
             6.0
-          ],
-          "desc": "描述"
+          ]
         },
         {
           "index": "4ords_2D_2",
-          "name": "4阶次切片",
           "value": [
             8.0
-          ],
-          "desc": "描述"
+          ]
         }
       ],
       "pointNum": 17
@@ -302,7 +254,7 @@
   ],
   "speedCalcInfo": [
     {
-      "name": "转速计算信息1",
+      "name": "test1",
       "speedSignal": "resolver",
       "averageNum": 64,
       "coils": 4,
@@ -316,7 +268,7 @@
       ]
     },
     {
-      "name": "转速计算信息1",
+      "name": "test2",
       "speedSignal": "resolver",
       "averageNum": 64,
       "coils": 4,
@@ -487,53 +439,41 @@
       "vibrationIndicatorList": [
         {
           "index": "RMS_time_1v_1",
-          "name": "中文一",
           "value": [
             1
-          ],
-          "desc": "描述1"
+          ]
         },
         {
           "index": "Crest_time_2v_1",
-          "name": "中文二",
           "value": [
             2
-          ],
-          "desc": "描述2"
+          ]
         },
         {
           "index": "Kurtosis_time_3v_1",
-          "name": "中文三",
           "value": [
             3
-          ],
-          "desc": "描述3"
+          ]
         }
       ],
       "soundIndicatorList": [
         {
           "index": "RMS_time_1s_1",
-          "name": "中文一",
           "value": [
             1
-          ],
-          "desc": "描述1"
+          ]
         },
         {
           "index": "Crest_time_2s_1",
-          "name": "中文二",
           "value": [
             2
-          ],
-          "desc": "描述2"
+          ]
         },
         {
           "index": "Kurtosis_time_3s_1",
-          "name": "中文三",
           "value": [
             3
-          ],
-          "desc": "描述3"
+          ]
         }
       ],
       "calRate": 10
@@ -542,53 +482,41 @@
       "vibrationIndicatorList": [
         {
           "index": "RMS_time_1v_2",
-          "name": "中文一",
           "value": [
             1
-          ],
-          "desc": "描述1"
+          ]
         },
         {
           "index": "Crest_time_2v_2",
-          "name": "中文二",
           "value": [
             2
-          ],
-          "desc": "描述2"
+          ]
         },
         {
           "index": "Kurtosis_time_3v_2",
-          "name": "中文三",
           "value": [
             3
-          ],
-          "desc": "描述3"
+          ]
         }
       ],
       "soundIndicatorList": [
         {
           "index": "RMS_time_1s_2",
-          "name": "中文一",
           "value": [
             1
-          ],
-          "desc": "描述1"
+          ]
         },
         {
           "index": "Crest_time_2s_2",
-          "name": "中文二",
           "value": [
             2
-          ],
-          "desc": "描述2"
+          ]
         },
         {
           "index": "Kurtosis_time_3s_3",
-          "name": "中文三",
           "value": [
             3
-          ],
-          "desc": "描述3"
+          ]
         }
       ],
       "calRate": 10
