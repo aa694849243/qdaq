@@ -112,9 +112,9 @@ def nvh_calc_process_for_qdaq(in_Q, out_Q, gv_dict_status,
     qDAQ_logger.debug(
         f"nvh_calc_process:pid={os.getpid()},ppid={os.getppid()},thread={threading.current_thread().name}")
     # 时域指标计算帧长
-    calSizes = list(pluck("calSize", param.timeDomainCalcInfo))
+    calSizes = [*pluck("calSize", param.timeDomainCalcInfo)]
     # 角度重采样两边均多取arPoints个点
-    arPoints = list(pluck("arPoints", param.orderSpectrumCalcInfo))
+    arPoints = [*pluck("arPoints", param.orderSpectrumCalcInfo)]
     # 采样率
     sampleRate = param.taskInfo["sampleRate"]
     # 帧长
@@ -477,10 +477,7 @@ def nvh_calc_process_for_qdaq(in_Q, out_Q, gv_dict_status,
                     test_result['resultData'][sensor_index]['dataSection'][
                         data['testNameIndex']]['onedData'].append(data['RampQuality'])
                 qDAQ_logger.info(
-                    "1D order indicators calculation of sensor{}, test: {} finished".format(
-                        sensor_index + 1,
-                        param.speedRecogInfo['testName'][
-                            data['recogIndex']]))
+                    f"1D order indicators calculation of sensor{sensor_index + 1}, test: {param.speedRecogInfo['testName'][data['recogIndex']]} finished")
             except Exception:
                 gv_dict_status["code"] = 3000
                 gv_dict_status["msg"] = "一维阶次切片计算错误!"
@@ -638,8 +635,8 @@ def nvh_calc_process_for_fluctuation_norsp(in_Q, out_Q, gv_dict_status,
     global gv_dict_flag, trigger_ndarray, rpml_array, rpm_array, vib_ndarray
 
     gc.enable()
-    qDAQ_logger.debug("nvh_calc_process:pid={},ppid={},thread={}".format(os.getpid(), os.getppid(),
-                                                                         threading.current_thread().name))
+    qDAQ_logger.debug(
+        f"nvh_calc_process:pid={os.getpid()},ppid={os.getppid()},thread={threading.current_thread().name}")
 
     # 时域指标计算帧长
     calSize = param.timeDomainCalcInfo["calSize"]

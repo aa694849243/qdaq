@@ -426,14 +426,14 @@ def oned_time_domain(temptd, calc_size, time_domain_calc_info, sensor_index, sen
                 'value': oned_crest(temptd, calc_size),
                 "indicatorDiagnostic": -1
             })
-        elif indicator['index'].lower()[:7] == 'kurtosis':
+        elif indicator['index'].lower()[:8] == 'kurtosis':
             onedtd_result.append({
                 'name': indicator['index'],
                 'unit': indicator['unit'][0] if len(indicator['unit']) == 1 else indicator['unit'][sensor_index],
                 'value': oned_kurtosis(temptd, calc_size),
                 "indicatorDiagnostic": -1
             })
-        elif indicator['index'].lower()[:7] == 'skewness':
+        elif indicator['index'].lower()[:8] == 'skewness':
             onedtd_result.append({
                 'name': indicator['index'],
                 'unit': indicator['unit'][0] if len(indicator['unit']) == 1 else indicator['unit'][sensor_index],
@@ -2253,7 +2253,7 @@ def oned_stat_factor_mean(tempsf, twodsf, stat_factor_calc_info, sensor_index, s
         # Crest，Kurtosis, skewness求简单平均
         # 确认是否进行db转换
         for index in info:
-            if index.lower()[:8] in ("Kurtosis", "skewness") or index.lower()[:5] == 'crest':
+            if index.lower()[:8] in ("kurtosis", "skewness") or index.lower()[:5] == 'crest':
                 if info[index]['yUnit'] == 'dB':
                     # 计算一维结果
                     target_value = db_convertion(np.mean(info[index]['yValue']),

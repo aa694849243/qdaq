@@ -6,7 +6,7 @@
       "sensor02"
     ],
     "systemNo": "BYDDM",
-    "type": "ktz999x_cj_7",
+    "type": "ktz1111x_cj_7",
     "unit": "g"
   },
   "dataSaveFlag": {
@@ -26,7 +26,7 @@
     {
       "vibrationIndicatorList": [
         {
-          "index": "Skewness_1v_1",
+          "index": "RMS_1v_1",
           "value": 1
         },
         {
@@ -34,13 +34,13 @@
           "value": 2
         },
         {
-          "index": "Kurtosis_3v_1",
+          "index": "Kurtosis_4v_1",
           "value": 4
         }
       ],
       "soundIndicatorList": [
         {
-          "index": "Skewness_1s_1",
+          "index": "RMS_1s_1",
           "value": 1
         },
         {
@@ -48,7 +48,7 @@
           "value": 2
         },
         {
-          "index": "Kurtosis_3s_1",
+          "index": "Kurtosis_4s_1",
           "value": 4
         }
       ],
@@ -59,7 +59,7 @@
     {
       "vibrationIndicatorList": [
         {
-          "index": "Skewness_1v_2",
+          "index": "RMS_1v_2",
           "value": 1
         },
         {
@@ -67,13 +67,13 @@
           "value": 2
         },
         {
-          "index": "Kurtosis_3v_2",
+          "index": "Kurtosis_4v_2",
           "value": 4
         }
       ],
       "soundIndicatorList": [
         {
-          "index": "Skewness_1s_2",
+          "index": "RMS_1s_2",
           "value": 1
         },
         {
@@ -81,7 +81,7 @@
           "value": 2
         },
         {
-          "index": "Kurtosis_3s_2",
+          "index": "Kurtosis_4s_2",
           "value": 4
         }
       ],
@@ -105,7 +105,7 @@
       "modulationDepthCalcList": [
         {
           "harmonicCount": 2,
-          "modulationOrder": 172.0,
+          "modulationOrder": 192.0,
           "sideFrequencyCount": 3,
           "indicatorInfoList": [
             {
@@ -438,42 +438,24 @@
     {
       "vibrationIndicatorList": [
         {
-          "index": "RMS_time_1v_1",
-          "value": [
-            1
-          ]
+          "index": "RMS_time_1v_1"
         },
         {
-          "index": "Crest_time_2v_1",
-          "value": [
-            2
-          ]
+          "index": "Crest_time_2v_1"
         },
         {
-          "index": "Kurtosis_time_3v_1",
-          "value": [
-            3
-          ]
+          "index": "Kurtosis_time_3v_1"
         }
       ],
       "soundIndicatorList": [
         {
-          "index": "RMS_time_1s_1",
-          "value": [
-            1
-          ]
+          "index": "RMS_time_1s_1"
         },
         {
-          "index": "Crest_time_2s_1",
-          "value": [
-            2
-          ]
+          "index": "Crest_time_2s_1"
         },
         {
-          "index": "Kurtosis_time_3s_1",
-          "value": [
-            3
-          ]
+          "index": "Kurtosis_time_3s_1"
         }
       ],
       "calRate": 10
@@ -481,42 +463,24 @@
     {
       "vibrationIndicatorList": [
         {
-          "index": "RMS_time_1v_2",
-          "value": [
-            1
-          ]
+          "index": "RMS_time_1v_2"
         },
         {
-          "index": "Crest_time_2v_2",
-          "value": [
-            2
-          ]
+          "index": "Crest_time_2v_2"
         },
         {
-          "index": "Kurtosis_time_3v_2",
-          "value": [
-            3
-          ]
+          "index": "Kurtosis_time_3v_2"
         }
       ],
       "soundIndicatorList": [
         {
-          "index": "RMS_time_1s_2",
-          "value": [
-            1
-          ]
+          "index": "RMS_time_1s_2"
         },
         {
-          "index": "Crest_time_2s_2",
-          "value": [
-            2
-          ]
+          "index": "Crest_time_2s_2"
         },
         {
-          "index": "Kurtosis_time_3s_3",
-          "value": [
-            3
-          ]
+          "index": "Kurtosis_time_3s_3"
         }
       ],
       "calRate": 10

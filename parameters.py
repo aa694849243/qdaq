@@ -597,7 +597,7 @@ def stat_factor_calc_info_update(stat_factor_calc_info, order_spectrum_calc_info
         if stat_factor_calc_info[i]["vibrationIndicatorList"]:
             for j in range(len(stat_factor_calc_info[i]['vibrationIndicatorList'])):
                 stat_factor_calc_info[i]['vibrationIndicatorList'][j]['pointsNum'] = round(
-                    temp_num * speedSourceOrder / stat_factor_calc_info[i]['vibrationIndicatorList'][j]['value'])
+                    temp_num * stat_factor_calc_info[i]['vibrationIndicatorList'][j]['value'] / speedSourceOrder)
                 stat_factor_calc_info[i]['vibrationIndicatorList'][j]['stepPoints'] = round(
                     stat_factor_calc_info[i]['vibrationIndicatorList'][j]['pointsNum'] * (
                             1 - stat_factor_calc_info[i]['overlapRatio']))
